@@ -1,0 +1,16 @@
+#location{
+    text-align: center;
+    margin: 50px;
+    overflow-x: hidden; /*페이지 작아지면 같이 작아짐*/ 
+}
+
+#location_font{
+    text-align: center;
+    overflow-x: hidden; /*페이지 작아지면 같이 작아짐*/ 
+    overflow-y: hidden;
+    font-size: 3rem;
+    margin: 50px;
+
+}
+
+

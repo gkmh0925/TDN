@@ -1,0 +1,318 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <!-- Always include this line of code!!! -->
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
+    <!-- <meta
+      name="description"
+      content="Omnifood is an AI-powered food subscription that will make you eat healthy again, 365 days per year. It's tailored to your personal tastes and nutritional needs."
+    /> -->
+
+    <!-- <link rel="icon" href="img/favicon.png" /> -->
+    <!-- <link rel="apple-touch-icon" href="img/apple-touch-icon.png" /> -->
+    <!-- <link rel="manifest" href="manifest.webmanifest" /> -->
+
+    <!--글꼴-->
+    <link rel="preconnect" href="https://fonts.gstatic.com" />
+    <link
+    href="https://fonts.googleapis.com/css2?family=Rubik:wght@400;500;600;700&display=swap"
+    rel="stylesheet"/>
+    <!-- 글꼴1 -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Song+Myung&display=swap" rel="stylesheet">
+
+    <!--css부분-->
+    <link rel="stylesheet" href="css/general.css" />
+    <link rel="stylesheet" href="css/style.css" />
+    <link rel="stylesheet" href="css/queries.css" />
+
+
+    <!--스크립트 부분인데, 분석필요-->
+    <script
+      type="module"
+      src="https://unpkg.com/ionicons@5.4.0/dist/ionicons/ionicons.esm.js"
+    ></script>
+    <script
+      nomodule=""
+      src="https://unpkg.com/ionicons@5.4.0/dist/ionicons/ionicons.js"
+    ></script>
+    <script
+      defer
+      src="https://unpkg.com/smoothscroll-polyfill@0.4.4/dist/smoothscroll.min.js"
+    ></script>
+    <script defer src="js/script.js"></script>
+    <script defer src="js/timer.js"></script>
+    <script>
+      let addWorker = new Worker("js/timer.js"); 
+      addWorker.onmessage = function (e) {document.getElementById("timer").innerHTML = e.data;}
+      function start() {addWorker.postMessage("start");}
+    </script>
+
+
+    <title>맛의 레일로드!</title>
+  </head>
+
+  <body>
+
+    <!--헤더 부분_구 확인완료 -->
+    <header class="header">
+      <!--로고 누르면 메인으로가는 것 로고 이미지사이트 https://www.flaticon.com/kr/free-icons/train  -->
+      <a href="index.html">
+        <img class="logo" alt="subway" src="img/subway3.png" width="300px" height="300px"/>
+      </a>
+
+      <nav class="main-nav">
+        <ul class="main-nav-list">
+          <li><a class="main-nav-link nav-cta" href="index.html">홈으로</a></li>
+          <li><a class="main-nav-link" href="notice.html">공지사항</a></li>
+          <li><a class="main-nav-link" href="dailyCheck.html">출석체크</a></li>
+          <li><a class="main-nav-link" href="myLocation.html">내위치확인</a></li>
+          <li><a class="main-nav-link" href="coupon.html">쿠폰</a></li>
+          <li><a class="main-nav-link" href="login.html">로그인</a></li>
+          <li><a class="main-nav-link" href="membership.html">회원가입</a></li>
+          <!-- nav-cta 만 추가하면, 주황색으로 변경-->
+        </ul>
+      </nav>
+
+      <!--헤더 관련된 부분 없애면, 헤더 고정안된다.-->
+      <button class="btn-mobile-nav">
+        <ion-icon class="icon-mobile-nav" name="menu-outline"></ion-icon>
+        <ion-icon class="icon-mobile-nav" name="close-outline"></ion-icon>
+      </button>
+
+    </header>
+
+
+
+
+
+
+
+     <main>
+           <!--민현오빠 추가부분 body header 다음의 main 아래--> 
+           <section class="section-hero">
+            <div class="hero">
+              <div class="hero-text-box"> 
+                <h1 class="heading-primary">
+                  이번 역의 맛집은 어디?
+                </h1>
+                <a href="index2.html" class="btn btn--full margin-right-sm">인근<br>지하철역</a>
+                <a href="index2.html" class="btn btn--full margin-right-sm">저렴한<br>배달팁</a><br>
+                <a href="index2.html" class="btn btn--full margin-right-sm">최소<br>주문비</a>
+                <a href="index2.html" class="btn btn--full margin-right-sm">높은<br>별점</a>
+                <div class="delivered-meals">
+                  <div class="delivered-imgs">
+                    <img src="img/customers/customer-1.jpg" alt="Customer photo" />
+                    <img src="img/customers/customer-2.jpg" alt="Customer photo" />
+                    <img src="img/customers/customer-3.jpg" alt="Customer photo" />
+                    <img src="img/customers/customer-4.jpg" alt="Customer photo" />
+                    <img src="img/customers/customer-5.jpg" alt="Customer photo" />
+                    <img src="img/customers/customer-6.jpg" alt="Customer photo" />
+                  </div>
+                  <p class="delivered-text" >
+                    <span>+</span><span id="timer" onclick="start()">165120</span> 수 많은 유저들의 검증된 맛집!
+                  </p>
+                </div>
+              </div>         
+            </div>
+          </section>
+          <!--민현오빠 추가부분 --> 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+          <!--승현 작업 부분-->
+          <!--섹션1-->
+       <section class="section-featured">
+        <div class="container">
+          <h2 class="heading-featured-in">As featured in</h2>
+          <div class="logos">
+            <a class="logo-link" href="news.html"><img src="img/logos/news1.png" alt="Techcrunch logo"/></a>
+            <img src="img/logos/news2.png" alt="Business Insider logo"/>
+            <img src="img/logos/news3.png" alt="The New York Times logo"/>
+            <img src="img/logos/news4.png" alt="Forbes logo" />
+            <img src="img/logos/news5.png" alt="USA Today logo" />
+          </div>
+        </div>
+      </section>
+
+
+
+
+      <!--섹션2-->
+      <section class="section-how" id="how">
+        <div class="container">
+          <span class="subheading">number of users</span>
+          <h2 class="heading-secondary">
+            홈페이지 누적 가입자 수 165,120 + 가입
+          </h2>
+        </div>
+
+        <div class="container grid grid--2-cols grid--center-v"> 
+          <!-- STEP 01 -->
+           <div class="step-text-box">
+            <!-- <p class="step-number">01</p> -->
+            <h3 class="joinevent1">
+              가입 후 첫 리뷰 작성 시 커피 증정<br><br>
+              추첨 통해 아이폰15프로까지<br><br>
+            </h3>
+            <p class="step-description1">
+              추첨 기간 : 23.11.20 ~ 23.12.31<br><br>
+              당첨자 발표 : 2024.1.2
+            </p>
+          </div>
+          <div class="joinus">
+            <img
+              src="img\good\qqq1.png"
+              class="qqq1"
+              alt="qqq1img"
+              width="500"
+              height="500"
+            />
+          </div>
+
+          <!-- STEP 02 -->
+           <div class="joinus">
+            <a class="logo-link" href="https://pf.kakao.com/_TsIAE"><img
+              src="img\good\qqq2.png"
+              class="qqq2"
+              alt="qqq2img"
+              width="700"
+              height="500"
+            /></a>
+          </div>
+          <div class="joinus">
+            <p class="step-number"></p>
+            <h3 class="joinevent2">카카오톡 채널 친구전용 혜택</h3><br><br><br>
+            <p class="step-description2">
+              쿠폰 등록 후 3일 이내 1만원 이상<br><br>
+              구매 시 3,000원 할인 쿠폰!
+            </p>
+          </div><br><br>
+        </div>
+
+          <!-- STEP 03 -->
+           <div class="joinus">
+            <p class="step-number"></p>
+            <h3 class="joinevent3">신규 가입 혜택</h3><br><br><br>
+            <span class="step-description3">
+              구매 금액에 따라 폭넓게 사용 가능한<br><br>
+              신규 회원 최대 10% 할인 쿠폰
+            </p><br><br>
+            <div class="bannner">
+              <a class="logo-img" href="membership.html"><img src="img\good\qqq3.png"></a>
+              
+            </div>
+          </div>
+        
+      </section>
+
+     
+
+      
+    </main>
+
+    
+    
+    <footer class="footer">
+      <div class="container grid grid--footer">
+        <div class="logo-col">
+          <a href="#" class="footer-logo">
+            <img class="logo" alt="subway4" src="img/subway4.png" />
+          </a>
+
+          <ul class="social-links">
+            <li>
+              <a class="footer-link" href="#"
+                ><ion-icon class="social-icon" name="logo-instagram"></ion-icon
+              ></a>
+            </li>
+            <li>
+              <a class="footer-link" href="#"
+                ><ion-icon class="social-icon" name="logo-facebook"></ion-icon
+              ></a>
+            </li>
+            <li>
+              <a class="footer-link" href="#"
+                ><ion-icon class="social-icon" name="logo-twitter"></ion-icon
+              ></a>
+            </li>
+          </ul>
+
+          <p class="copyright">
+            Copyright &copy; <span class="year">2027</span><br>
+            by 맛의 레일로드<br>
+            All rights reserved.
+          </p>
+        </div>
+
+        <div class="address-col">
+          <p class="footer-heading">문의하기</p>
+          <address class="contacts">
+            <p class="address">
+              서울특별시 관악구 <br>
+              남부순환로 1820 <br>
+              에그옐로우 14층
+            </p>
+            <p>
+              <a class="footer-link">02-1234-1234</a
+              ><br />
+              <a class="footer-link" href="https://nid.naver.com/nidlogin.login?url=https%3A%2F%2Fmail.naver.com%2F"
+                >project@naver.com</a
+              >
+            </p>
+          </address>
+        </div>
+
+        <nav class="nav-col">
+          <p class="footer-heading">계정</p>
+          <ul class="footer-nav">
+            <li><a class="footer-link" href="membership.html">회원가입</a></li>
+            <li><a class="footer-link" href="login.html">로그인</a></li>
+            <li><a class="footer-link" href="#">Android app</a></li>
+            <li><a class="footer-link" href="#">iOS app</a></li>
+          </ul>
+        </nav>
+
+        <nav class="nav-col">
+          <p class="footer-heading">회사</p>
+          <ul class="footer-nav">
+            <li><a class="footer-link" href="notice.html">공지사항</a></li>
+            <li><a class="footer-link" href="https://www.google.co.kr/maps/place/%EA%B8%80%EB%A1%9C%EB%B2%8C%EC%95%84%EC%9D%B4%ED%8B%B0%EC%9D%B8%EC%9E%AC%EA%B0%9C%EB%B0%9C%EC%9B%90/data=!3m1!4b1!4m6!3m5!1s0x357c9f660dc1a8e5:0xe9d099e33e1115b8!8m2!3d37.4809094!4d126.9520957!16s%2Fg%2F11lh6dpg3v?hl=ko&entry=ttu">위치</a></li>
+            <li><a class="footer-link" href="#">이용약관</a></li>
+            <li><a class="footer-link" href="#">채용</a></li>
+          </ul>
+        </nav>
+
+        <nav class="nav-col">
+          <p class="footer-heading">회사 정보</p>
+          <ul class="footer-nav">
+            <li><a class="footer-link" href="#">사업자 정보 확인</a></li>
+            <li><a class="footer-link" href="#">대표자명 : 김철수</a></li>
+            <li><a class="footer-link" href="#">상호명 : 맛의 레일로드</a></li>
+          </ul>
+        </nav>
+      </div>
+    </footer> 
+
+
+  </body>
+</html>

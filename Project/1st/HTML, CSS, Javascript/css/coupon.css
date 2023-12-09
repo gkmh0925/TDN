@@ -1,0 +1,48 @@
+#coupon {
+    width: 300px;
+    height: 200px;
+    padding: 10px;
+}
+
+#coupon_done{
+    width: 300px;
+    height: 200px;
+    padding: 10px;
+}
+
+#coupon_btn{
+    width: 300px;
+    height: 100px;
+    margin-top: 50px;
+    font-size: 30px;
+    font-weight: bold;
+
+}
+#cou{
+    text-align: center;
+    margin: 80px;
+    overflow-x: hidden;
+}
+
+
+/*쿠폰추가부분*/
+#coupon1 {
+    width: 300px;
+    height: 200px;
+    padding: 10px;
+}
+#coupon2 {
+    width: 300px;
+    height: 200px;
+    padding: 10px;
+}
+#coupon3 {
+    width: 300px;
+    height: 200px;
+    padding: 10px;
+}
+#coupon4 {
+    width: 300px;
+    height: 200px;
+    padding: 10px;
+}

@@ -1,0 +1,694 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <!-- Always include this line of code!!! -->
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
+    <!-- <meta
+      name="description"
+      content="Omnifood is an AI-powered food subscription that will make you eat healthy again, 365 days per year. It's tailored to your personal tastes and nutritional needs."
+    /> -->
+
+    <!-- <link rel="icon" href="img/favicon.png" /> -->
+    <!-- <link rel="apple-touch-icon" href="img/apple-touch-icon.png" /> -->
+    <!-- <link rel="manifest" href="manifest.webmanifest" /> -->
+
+    <!--글꼴-->
+    <link rel="preconnect" href="https://fonts.gstatic.com" />
+    <link
+    href="https://fonts.googleapis.com/css2?family=Rubik:wght@400;500;600;700&display=swap"
+    rel="stylesheet"
+    />
+
+    <!--css부분-->
+    <link rel="stylesheet" href="css/general3.css" />
+    <link rel="stylesheet" href="css/style3.css" />
+    <link rel="stylesheet" href="css/queries.css" />
+    <!--제작한css부분-->
+    <link rel="stylesheet" href="css/list.css" />
+    <link rel="stylesheet" href="css/media.css" />
+    <link rel="stylesheet" href="css/review.css" />
+
+
+    <!--스크립트 부분인데, 분석필요-->
+    <script
+      type="module"
+      src="https://unpkg.com/ionicons@5.4.0/dist/ionicons/ionicons.esm.js"
+    ></script>
+    <script
+      nomodule=""
+      src="https://unpkg.com/ionicons@5.4.0/dist/ionicons/ionicons.js"
+    ></script>
+    <script
+      defer
+      src="https://unpkg.com/smoothscroll-polyfill@0.4.4/dist/smoothscroll.min.js"
+    ></script>
+    <script defer src="js/script.js"></script>
+
+
+    <title>맛의 레일로드!</title>
+  </head>
+
+  <body>
+
+    <!--헤더 부분_구 확인완료 -->
+    <header class="header">
+      <!--로고 누르면 메인으로가는 것 로고 이미지사이트 https://www.flaticon.com/kr/free-icons/train  -->
+      <a href="index.html">
+        <img class="logo" alt="subway" src="img/subway3.png" width="300px" height="300px"/>
+      </a>
+
+      <nav class="main-nav">
+        <ul class="main-nav-list">
+          <li><a class="main-nav-link nav-cta" href="index.html">홈으로</a></li>
+          <li><a class="main-nav-link" href="notice.html">공지사항</a></li>
+          <li><a class="main-nav-link" href="dailyCheck.html">출석체크</a></li>
+          <li><a class="main-nav-link" href="myLocation.html">내위치확인</a></li>
+          <li><a class="main-nav-link" href="coupon.html">쿠폰</a></li>
+          <li><a class="main-nav-link" href="login.html">로그인</a></li>
+          <li><a class="main-nav-link" href="membership.html">회원가입</a></li>
+          <!-- nav-cta 만 추가하면, 주황색으로 변경-->
+        </ul>
+      </nav>
+
+      <!--헤더 관련된 부분 없애면, 헤더 고정안된다.-->
+      <button class="btn-mobile-nav">
+        <ion-icon class="icon-mobile-nav" name="menu-outline"></ion-icon>
+        <ion-icon class="icon-mobile-nav" name="close-outline"></ion-icon>
+      </button>
+
+    </header>
+
+    <main>
+      <section class="section-hero">
+        <div class="hero">
+          <div class="hero-text-box">
+            <h1 class="heading-primary">
+              <서울대입구> 구퉁이
+            </h1>
+            <p class="hero-description">
+              서울 관악구 관악로14길 85 1층
+            </p>
+            <!-- 원본 <a href="#cta" class="btn btn--full margin-right-sm"
+              >♡ 165+</a> -->
+            <button class="good" onclick="toggleAct(this)">♡ <span class="goodspan">165</span></button>
+
+            <a href="#how" class="btn btn--outline">상세정보 &darr;</a>
+            <div class="delivered-meals">
+              <div class="delivered-imgs">
+                <img src="img/customers/customer-1.jpg" alt="Customer photo" />
+                <img src="img/customers/customer-2.jpg" alt="Customer photo" />
+                <img src="img/customers/customer-3.jpg" alt="Customer photo" />
+                <img src="img/customers/customer-4.jpg" alt="Customer photo" />
+                <img src="img/customers/customer-5.jpg" alt="Customer photo" />
+                <img src="img/customers/customer-6.jpg" alt="Customer photo" />
+              </div>
+              <p class="delivered-text">
+                <span>주변 사람들이 많이 이용했어요.</span>
+              </p>
+            </div>
+          </div>
+          <div class="hero-img-box">
+            <picture>
+              <source srcset="img\index3\meat2.png" type="image/webp"/> <!--맨 위 메인 이미지 고기 사진-->
+              
+              <img
+                src="img/hero-min.png"
+                class="hero-img"
+                alt="Woman enjoying food, meals in storage container, and food bowls on a table"
+              />
+            </picture>
+          </div>
+        </div>
+      </section>
+
+      <section class="section-how" id="how">
+        <div class="container">
+          <span class="subheading">상세정보</span>
+          <h2 class="heading-secondary">
+            구퉁이 이용시간을 확인해주세요.
+          </h2>
+        </div>
+
+        <div class="container grid grid--2-cols grid--center-v">
+          <!-- STEP 01 -->
+          <div class="step-text-box">
+            <p class="step-number">01</p>
+            <h3 class="heading-tertiary">
+              서울대입구 구퉁이 영업시간
+            </h3>
+            <p class="step-description">
+              영업 전15:00에 영업 시작15시 0분에 영업 시작<br>
+              수
+              15:00 - 24:00<br>
+              목
+              15:00 - 24:00<br>
+              금
+              15:00 - 24:00<br>
+              토
+              12:00 - 23:00<br>
+              일
+              12:00 - 23:00<br>
+              월
+              15:00 - 24:00<br>
+              화
+              15:00 - 24:00<br>
+              - 동계에는 주말 3시전 방문 시 예약 바랍니다.
+            </p>
+          </div>
+
+          <div class="step-img-box"> <!--상세정보 1번째 이미지 사진-->
+            <img
+              src="img\index3\1.png" 
+              class="step-img"
+              alt="iPhone app
+            preferences selection screen" width="400px" height="400px"
+            />
+          </div> 
+
+          <!-- STEP 02 -->
+          <div class="step-img-box"><!--구글 지도 정보-->
+            <iframe src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3166.201231297615!2d126.95641542839661!3d37.47957743594519!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x357ca026e744c7e1%3A0xab14c1644553d5de!2z6rWs7YmB7J20!5e0!3m2!1sko!2skr!4v1701226523138!5m2!1sko!2skr" 
+            width="550" height="450" style="border:0;" allowfullscreen="" loading="lazy" referrerpolicy="no-referrer-when-downgrade"></iframe>
+          </div>
+          <div class="step-text-box">
+            <p class="step-number">02</p>
+            <h3 class="heading-tertiary">상세 위치</h3>
+            <p class="step-description">
+              [도로명주소] 서울 관악구 관악로14길 85 1층<br>
+              [지번 주소] 서울 관악구 봉천동 1620-20
+            </p>
+          </div>
+        
+          <!-- STEP 03 -->
+          <div class="main1">
+            <p class="step-number">03</p>
+            <h3 class="heading-tertiary">메뉴 MENU</h3>
+            <img src = "img\index3\main.png" alt = "main1" width="80%" height="80%"><!--메뉴판 모서리 css로 .main img 변경-->
+          </div>
+          <div class="main2" style="margin-top: 30%;">
+            <img src="img\index3\main2.png" alt ="main2" width="100%" height="100%">
+            
+          </div>
+        </div>
+        <div class="step-img-box">
+            
+          </div>
+        
+      </section>
+
+      <section class="section-meals" id="meals">
+        <div class="container center-text">
+          <span class="subheading">Convenient features</span>
+          <h2 class="heading-secondary">
+            편의
+          </h2>
+        </div>
+
+        <div class="container grid grid--3-cols margin-bottom-md">
+          <div class="meal">
+            <img
+              src="img\index3\store.png"
+              class="meal-img"
+              alt="Japanese Gyozas"
+              height="60%"
+            />
+            <div class="meal-content">
+              <div class="meal-tags">
+                <span class="tag tag--vegetarian">store</span>
+              </div>
+              <p class="meal-title">매장 소개</p>
+              <ul class="meal-attributes">
+                <li class="meal-attribute"> <!--아이콘 삽입 사이트 https://ionic.io/ionicons?_gl=1*1l6frzu*_ga*NDQ3NzE0MzA5LjE3MDEyNDEyODM.*_ga_REH9TJF6KF*MTcwMTI0MTI4Mi4xLjAuMTcwMTI0MTI4NS4wLjAuMA..-->
+                  <ion-icon name="heart-circle-outline"></ion-icon> <!--아이콘 변경/style.css에서 ion-icon 아이콘 크기 및 색상 변경-->
+                  <span><b>알림</b> *특별행사*</span>
+                </li>
+                <li class="meal-attribute">
+                  <ion-icon name="body-sharp"></ion-icon>
+                  <span><b>좌석</b> 총 8 테이블</span>
+                </li>
+                <li class="meal-attribute">
+                  <ion-icon name="star-sharp"></ion-icon>
+                  <span><strong>4.9</strong> rating (1050)</span>
+                </li>
+              </ul>
+            </div>
+          </div>
+
+          <div class="meal">
+            <img
+              src="img\index3\parking.png"
+              class="meal-img"
+              alt="Avocado Salad"
+              height="60%"
+            />
+            <div class="meal-content">
+              <div class="meal-tags">
+                <span class="tag tag--vegan">parking</span>
+              </div>
+              <p class="meal-title">주차 여부</p>
+              <ul class="meal-attributes">
+                <li class="meal-attribute">
+                  <ion-icon name="logo-linkedin"></ion-icon>
+                  <span>지하 1층</span>
+                </li>
+                <li class="meal-attribute">
+                  <ion-icon name="car-sharp"></ion-icon>
+                  <span>총 10대 가능</strong></span>
+                </li>
+                <li class="meal-attribute">
+                  <ion-icon name="journal-sharp"></ion-icon>
+                  <span>무료 이용</strong></span>
+                </li>
+
+              </ul>
+            </div>
+          </div>
+
+          <div class="diets">
+            <h3 class="heading-tertiary">상세 정보</h3>
+            <ul class="list">
+              <li class="list-item">
+                <ion-icon class="list-icon" name="checkmark-outline"></ion-icon>
+                <span>주차 가능 여부</span>
+              </li>
+              <li class="list-item">
+                <ion-icon class="list-icon" name="checkmark-outline"></ion-icon>
+                <span>예약</span>
+              </li>
+              <li class="list-item">
+                <ion-icon class="list-icon" name="checkmark-outline"></ion-icon>
+                <span>단체 이용 가능</span>
+              </li>
+              <li class="list-item">
+                <ion-icon class="list-icon" name="checkmark-outline"></ion-icon>
+                <span>무선 인터넷</span>
+              </li>
+              <li class="list-item">
+                <ion-icon class="list-icon" name="checkmark-outline"></ion-icon>
+                <span>포장</span>
+              </li>
+              <li class="list-item">
+                <ion-icon class="list-icon" name="checkmark-outline"></ion-icon>
+                <span>남/녀 화장실 구분</span>
+              </li>
+              <li class="list-item">
+                <ion-icon class="list-icon" name="checkmark-outline"></ion-icon>
+                <span>유아의자</span>
+              </li>
+              <li class="list-item">
+                <ion-icon class="list-icon" name="checkmark-outline"></ion-icon>
+                <span>출입구 휠체어 이용가능</span>
+              </li>
+              <li class="list-item">
+                <ion-icon class="list-icon" name="checkmark-outline"></ion-icon>
+                <span>좌석 휠체어 이용가능</span>
+              </li>
+            </ul>
+          </div>
+        </div>
+
+        <div class="container all-recipes">
+          <a href="#" class="link">처음으로 &rarr;</a>  <!--&rarr 특수문자 코드-->
+        </div>
+      </section>
+
+      <section class="section-testimonials" id="testimonials">
+        <div class="testimonials-container">
+          <span class="subheading">review</span>
+          <h2 class="heading-secondary">방문자 리뷰 1,050개</h2>
+
+          <div class="testimonials">
+            <figure class="testimonial">
+              <img
+                class="testimonial-img"
+                alt="Photo of customer Dave Bryson"
+                src="img/customers/dave.jpg"
+              />
+              <blockquote class="testimonial-text">
+                담백하고 맛있어요. 고기 잘 안먹는 둘째도 맛있게 먹고 친절하셔서 기분 좋게 먹고 갑니다!
+              </blockquote>
+              <p class="testimonial-name">&mdash; wj</p>
+            </figure>
+
+            <figure class="testimonial">
+              <img
+                class="testimonial-img"
+                alt="Photo of customer Ben Hadley"
+                src="img/customers/ben.jpg"
+              />
+              <blockquote class="testimonial-text">
+                아~~ 리뷰를 안하려고 했는데 넘 맛있게 먹어서 안할 수가 없네요~~~ 서비스도 굿굿이네요. 재방문 의사 100% 있습니다!!
+              </blockquote>
+              <p class="testimonial-name">&mdash; candoit</p>
+            </figure>
+
+            <figure class="testimonial">
+              <img
+                class="testimonial-img"
+                alt="Photo of customer Steve Miller"
+                src="img/customers/steve.jpg"
+              />
+              <blockquote class="testimonial-text">
+                갈비살 한판 주문했는데 양이 많았어요!! 알찬 구성에 가격도 적당하고 정말 맛있게 먹었어요~~ 집 주변이라 종종 갈 것 같아요.
+              </blockquote>
+              <p class="testimonial-name">&mdash; 커리와 둘리</p>
+            </figure>
+
+            <figure class="testimonial">
+              <img
+                class="testimonial-img"
+                alt="Photo of customer Hannah Smith"
+                src="img/customers/hannah.jpg"
+              />
+              <blockquote class="testimonial-text">
+                혜자 맛집! 양도 2인이서 배불리 잘 먹었습니다. 가성비도 아주 좋습니다.
+              </blockquote>
+              <p class="testimonial-name">&mdash; 에이트 빌</p>
+            </figure>
+          </div>
+        </div>
+
+        <div class="gallery">
+          <figure class="gallery-item">
+            <img
+              src="img\index3\review1.png"
+              alt="Photo of beautifully
+            arranged food"
+            />
+            <!-- <figcaption>Caption</figcaption> -->
+          </figure>
+          <figure class="gallery-item">
+            <img
+              src="img\index3\review2.png"
+              alt="Photo of beautifully
+            arranged food"
+            />
+          </figure>
+          <figure class="gallery-item">
+            <img
+              src="img\index3\review3.png"
+              alt="Photo of beautifully
+            arranged food"
+            />
+          </figure>
+          <figure class="gallery-item">
+            <img
+              src="img\index3\review4.png"
+              alt="Photo of beautifully
+            arranged food"
+            />
+          </figure>
+          <figure class="gallery-item">
+            <img
+              src="img\index3\review5.png"
+              alt="Photo of beautifully
+            arranged food"
+            />
+          </figure>
+          <figure class="gallery-item">
+            <img
+              src="img\index3\review6.png"
+              alt="Photo of beautifully
+            arranged food"
+            />
+          </figure>
+          <figure class="gallery-item">
+            <img
+              src="img\index3\review7.png"
+              alt="Photo of beautifully
+            arranged food"
+            />
+          </figure>
+          <figure class="gallery-item">
+            <img
+              src="img\index3\review8.png"
+              alt="Photo of beautifully
+            arranged food"
+            />
+          </figure>
+          <figure class="gallery-item">
+            <img
+              src="img\index3\review9.png"
+              alt="Photo of beautifully
+            arranged food"
+            />
+          </figure>
+          <figure class="gallery-item">
+            <img
+              src="img\index3\review10.png"
+              alt="Photo of beautifully
+            arranged food"
+            />
+          </figure>
+          <figure class="gallery-item">
+            <img
+              src="img\index3\review11.png"
+              alt="Photo of beautifully
+            arranged food"
+            />
+          </figure>
+          <figure class="gallery-item">
+            <img
+              src="img\index3\review12.png"
+              alt="Photo of beautifully
+            arranged food"
+            />
+          </figure>
+        </div>
+      </section>
+
+      <section class="section-cta" id="cta">
+        <div class="container">
+          <div class="cta">
+            <div class="cta-text-box">
+              <h2 class="heading-secondary">예약 정보 입력</h2>
+              <p class="cta-text">
+                예약시 된장찌개 서비스!
+              </p>
+
+              <form class="cta-form" name="sign-up" netlify>
+                <div>
+                  <label for="full-name">이름</label>
+                  <input
+                    id="full-name"
+                    type="text"
+                    placeholder="김철수"
+                    name="full-name"
+                    required
+                  />
+                </div>
+
+                <div>
+                  <label for="number">전화번호</label>
+                  <input
+                    id="phone number"
+                    type="text"
+                    placeholder="010-1234-1234"
+                    name="email"
+                    required
+                  />
+                </div>
+
+                <div>
+                  <label for="select-where">인원</label>
+                  <select id="select-where" name="select-where" required>
+                    <option value="">인원수</option>
+                    <option value="friends">2인</option>
+                    <option value="friends">3인</option>
+                    <option value="youtube">4인</option>
+                    <option value="podcast">5인</option>
+                    <option value="ad">6인</option>
+                    <option value="others">6인 이상</option>
+                  </select>
+                </div>
+
+                <button class="btn btn--form">reservation</button>
+
+                <!-- <input type="checkbox" />
+                <input type="number" /> -->
+              </form>
+            </div>
+            <div><img src="img\index3\store2.png" height="100%">
+
+            </div>
+        </div>
+      </section>
+
+    <!--리스트 부분-->
+    <div class="board_wrap">
+      <div class="board_title">
+          <strong>리뷰 내역</strong>
+      </div>
+      <div class="board_list_wrap">
+          <div class="board_list">
+              <div class="top">
+                  <div class="num">번호</div>
+                  <div class="title">제목</div>
+                  <div class="writer">글쓴이</div>
+                  <div class="date">작성일</div>
+                  <div class="count">조회</div>
+              </div>
+              <div>
+                  <div class="num">5</div>
+                  <div class="title"><a href="news.html">너무 맛있었어여!</a></div>
+                  <div class="writer">트럼프</div>
+                  <div class="date">2023.12.01</div>
+                  <div class="count">181,684</div>
+              </div>
+              <div>
+                  <div class="num">4</div>
+                  <div class="title"><a href="view.html">푸짐하네요.</a></div>
+                  <div class="writer">푸틴</div>
+                  <div class="date">2023.9.4</div>
+                  <div class="count">33</div>
+              </div>
+              <div>
+                  <div class="num">3</div>
+                  <div class="title"><a href="view.html">재방문 의사 있습니다!!</a></div>
+                  <div class="writer">한진호</div>
+                  <div class="date">2023.1.15</div>
+                  <div class="count">33</div>
+              </div>
+              <div>
+                  <div class="num">2</div>
+                  <div class="title"><a href="view.html">잘 먹고 갑니다</a></div>
+                  <div class="writer">김철수</div>
+                  <div class="date">2022.10.15</div>
+                  <div class="count">33</div>
+              </div>
+              <div>
+                  <div class="num">1</div>
+                  <div class="title"><a href="view.html">서비스가 좋아요</a></div>
+                  <div class="writer">이미경</div>
+                  <div class="date">2021.6.15</div>
+                  <div class="count">33</div>
+              </div>
+          </div>
+          <div class="board_page">
+              <a href="#" class="bt first"></a>
+              <a href="#" class="bt prev"></a>
+              <a href="#" class="num on">1</a>
+              <a href="#" class="num">2</a>
+              <a href="#" class="num">3</a>
+              <a href="#" class="num">4</a>
+              <a href="#" class="num">5</a>
+              <a href="#" class="bt next">></a>
+              <a href="#" class="bt last">>></a>
+          </div>
+          <div class="bt_wrap">
+              <a href="list.html" class="on">등록</a>
+              <!--<a href="#">수정</a>-->
+          </div>
+      </div>
+  </div>
+    <!--리스트 부분-->
+
+    <!--풋터부분-->
+    <footer class="footer">
+      <div class="container grid grid--footer">
+        <div class="logo-col">
+          <a href="#" class="footer-logo">
+            <img class="logo" alt="subway4" src="img/subway4.png" />
+          </a>
+
+          <ul class="social-links">
+            <li>
+              <a class="footer-link" href="#"
+                ><ion-icon class="social-icon" name="logo-instagram"></ion-icon
+              ></a>
+            </li>
+            <li>
+              <a class="footer-link" href="#"
+                ><ion-icon class="social-icon" name="logo-facebook"></ion-icon
+              ></a>
+            </li>
+            <li>
+              <a class="footer-link" href="#"
+                ><ion-icon class="social-icon" name="logo-twitter"></ion-icon
+              ></a>
+            </li>
+          </ul>
+
+          <p class="copyright">
+            Copyright &copy; <span class="year">2027</span><br>
+            by 맛의 레일로드<br>
+            All rights reserved.
+          </p>
+        </div>
+
+        <div class="address-col">
+          <p class="footer-heading">문의하기</p>
+          <address class="contacts">
+            <p class="address">
+              서울특별시 관악구 <br>
+              남부순환로 1820 <br>
+              에그옐로우 14층
+            </p>
+            <p>
+              <a class="footer-link">02-1234-1234</a
+              ><br />
+              <a class="footer-link" href="https://nid.naver.com/nidlogin.login?url=https%3A%2F%2Fmail.naver.com%2F"
+                >project@naver.com</a
+              >
+            </p>
+          </address>
+        </div>
+
+        <nav class="nav-col">
+          <p class="footer-heading">계정</p>
+          <ul class="footer-nav">
+            <li><a class="footer-link" href="membership.html">회원가입</a></li>
+            <li><a class="footer-link" href="login.html">로그인</a></li>
+            <li><a class="footer-link" href="#">Android app</a></li>
+            <li><a class="footer-link" href="#">iOS app</a></li>
+          </ul>
+        </nav>
+
+        <nav class="nav-col">
+          <p class="footer-heading">회사</p>
+          <ul class="footer-nav">
+            <li><a class="footer-link" href="notice.html">공지사항</a></li>
+            <li><a class="footer-link" href="https://www.google.co.kr/maps/place/%EA%B8%80%EB%A1%9C%EB%B2%8C%EC%95%84%EC%9D%B4%ED%8B%B0%EC%9D%B8%EC%9E%AC%EA%B0%9C%EB%B0%9C%EC%9B%90/data=!3m1!4b1!4m6!3m5!1s0x357c9f660dc1a8e5:0xe9d099e33e1115b8!8m2!3d37.4809094!4d126.9520957!16s%2Fg%2F11lh6dpg3v?hl=ko&entry=ttu">위치</a></li>
+            <li><a class="footer-link" href="#">이용약관</a></li>
+            <li><a class="footer-link" href="#">채용</a></li>
+          </ul>
+        </nav>
+
+        <nav class="nav-col">
+          <p class="footer-heading">회사 정보</p>
+          <ul class="footer-nav">
+            <li><a class="footer-link" href="#">사업자 정보 확인</a></li>
+            <li><a class="footer-link" href="#">대표자명 : 김철수</a></li>
+            <li><a class="footer-link" href="#">상호명 : 맛의 레일로드</a></li>
+          </ul>
+        </nav>
+      </div>
+    </footer>
+<!--풋터부분-->
+
+<!-- 찜하기 버튼 효과, 클릭했을 때 배경색 변하게 적용 -->
+    <script>
+      const goodact = document.querySelector(".goodspan");
+      var toggle = false;
+      function toggleAct(button) {
+        toggle=!toggle;
+        if(toggle==true) {
+          button.classList.add("act");
+          goodact.innerHTML=166;
+        }
+        else {
+          button.classList.remove("act");
+          goodact.innerHTML=165;
+        }
+
+        // 토글 버튼 하나로 하는 방법
+        // button.classList.toggle("act");
+      }  
+    </script>
+  </body>
+
+  <script></script>
+</html>
