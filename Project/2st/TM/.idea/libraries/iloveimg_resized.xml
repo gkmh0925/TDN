@@ -1,0 +1,9 @@
+<component name="libraryTable">
+  <library name="iloveimg-resized">
+    <CLASSES>
+      <root url="jar://$PROJECT_DIR$/frontend/src/img/hero/iloveimg-resized.zip!/" />
+    </CLASSES>
+    <JAVADOC />
+    <SOURCES />
+  </library>
+</component>
