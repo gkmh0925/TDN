@@ -1,0 +1,63 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.coin.backend.mapper.KimchiTradeMapper">
+
+    <!-- kimchiInsert -->
+    <insert id="kimchiInsert" parameterType="DtoKimchiTrade" useGeneratedKeys="true" keyProperty="no">
+        INSERT INTO kimchi_trade(user_no, trade_date, trade_bid_persent, trade_bid_count, trade_ask_persent, trade_ask_count, trade_status)
+        VALUES (#{userNo}, NOW(), #{tradeBidPersent}, #{tradeBidCount}, #{tradeAskPersent}, #{tradeAskCount}, #{tradeStatus})
+    </insert>
+
+    <!-- kimchiSelect -->
+    <select id="kimchiSelect" resultType="DtoKimchiTrade" resultMap="kimchiResultMap">
+        SELECT
+            *
+        FROM  kimchi_trade
+        WHERE user_no = #{userNo}
+        ORDER BY no DESC
+    </select>
+
+    <!-- kimchiSelect 미체결 -->
+    <select id="kimchiSelectStatus" resultType="DtoKimchiTrade" resultMap="kimchiResultMap">
+        SELECT
+            *
+        FROM  kimchi_trade
+        WHERE user_no = #{userNo} AND trade_status = '미체결'
+        ORDER BY no DESC
+    </select>
+
+    <!-- kimchiUpdate -->
+    <update id="kimchiUpdate" parameterType="DtoKimchiTrade">
+        UPDATE  kimchi_trade
+        SET trade_status = #{status}
+        WHERE no = #{no}
+    </update>
+
+    <!-- kimchiUpdate -->
+    <update id="kimchiUpdateDone" parameterType="DtoKimchiTrade">
+        UPDATE  kimchi_trade
+        SET trade_status = #{status}, order_id = #{orderId}, order_date = NOW()
+        WHERE no = #{no}
+    </update>
+
+
+
+    <resultMap id="kimchiResultMap" type="DtoKimchiTrade">
+        <id property="no" column="no" />
+        <result property="userNo" column="user_no" />
+        <result property="orderId" column="order_id" />
+        <result property="tradeDate" column="trade_date" />
+        <result property="orderDate" column="order_date" />
+        <result property="tradeBidPersent" column="trade_bid_persent" />
+        <result property="tradeBidCount" column="trade_bid_count" />
+        <result property="tradeAskPersent" column="trade_ask_persent" />
+        <result property="tradeAskCount" column="trade_ask_count" />
+        <result property="tradeStatus" column="trade_status" />
+    </resultMap>
+
+</mapper>
+
+
+

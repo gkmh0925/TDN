@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="UTF-8"?> <!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.coin.backend.coinbackend.dao.DatabaseDao">
+    <select id="selectUser" resultType="com.coin.backend.coinbackend.dto.database.DatabaseDto">
+        select
+            *
+        from
+            user
+    </select>
+    <select id="selectLogin" resultType="com.coin.backend.coinbackend.dto.database.DatabaseDto">
+        SELECT
+            *
+        FROM
+            user
+        WHERE
+            UserId=#{UserId} AND UserPw=#{UserPw}
+    </select>
+</mapper>

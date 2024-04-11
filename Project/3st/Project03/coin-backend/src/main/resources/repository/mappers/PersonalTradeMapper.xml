@@ -1,0 +1,66 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+	"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.coin.backend.mapper.PersonalTradeMapper" >
+
+<!-- PersonalTradeMapper -->
+
+<!-- personal_trade userNo 기준으로 List 가져오기 (get방식)-->
+	<select id="persTradeList" resultType="DtoPersonalTrade" resultMap="persTradeResultMap">
+		SELECT
+			*
+		FROM  personal_trade
+		WHERE user_no = #{userNo}
+		ORDER BY no DESC
+	</select>
+
+<!-- personal_trade insert -->
+	<insert id="persTradeInsert" parameterType="DtoPersonalTrade" useGeneratedKeys="true" keyProperty="no">
+		INSERT INTO personal_trade
+			(user_no, trade_date, low_price, low_count, hight_price, hight_count, status)
+		VALUES
+		    (#{userNo}, NOW(), #{lowPrice}, #{lowCount}, #{hightPrice}, #{hightCount}, #{status})
+	</insert>
+
+<!-- personal_trade update -->
+	<update id="persTradeUpdate" parameterType="DtoPersonalTrade">
+		UPDATE  personal_trade
+		SET status = #{status}
+		WHERE no = #{no}
+	</update>
+
+<!-- personal_trade select status = 미체결 -->
+	<select id="persSelectStatusYet" resultType="DtoPersonalTrade" resultMap="persTradeResultMap">
+		SELECT
+			*
+		FROM  personal_trade
+		WHERE user_no = #{userNo} AND status = '미체결'
+		ORDER BY no DESC
+	</select>
+
+<!-- personal_trade done update -->
+	<update id="persTardeDoneUpdate" parameterType="DtoPersonalTrade">
+		UPDATE  personal_trade
+		SET status = #{status}, order_id = #{orderId}, order_date = NOW()
+		WHERE no = #{no}
+	</update>
+
+	<resultMap id="persTradeResultMap" type="DtoPersonalTrade">
+		<id property="no" column="no" />
+		<result property="userNo" column="user_no" />
+		<result property="orderId" column="order_id" />
+		<result property="tradeDate" column="trade_date" />
+		<result property="orderDate" column="order_date" />
+		<result property="lowPrice" column="low_price" />
+		<result property="lowCount" column="low_count" />
+		<result property="hightPrice" column="hight_price" />
+		<result property="hightCount" column="hight_count" />
+		<result property="status" column="status" />
+	</resultMap>
+
+
+</mapper>	
+
+
+

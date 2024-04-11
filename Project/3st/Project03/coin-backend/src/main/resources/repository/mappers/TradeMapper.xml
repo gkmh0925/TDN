@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+	"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.coin.backend.mapper.TradeMapper" >
+
+<!-- TradingMapper -->
+
+<!-- Trade table 전부 가져오기 (get방식) -->
+	<select id="tradeList" resultType="DtoTrade" resultMap="tradeResultMap">
+		SELECT 
+			*
+		FROM  trade
+		ORDER BY trade_no DESC
+	</select>
+
+	<resultMap id="tradeResultMap" type="DtoTrade">
+		<id property="tradeNo" column="trade_no" />
+		<result property="userNo" column="user_no" />
+		<result property="tradeDate" column="trade_date" />
+		<result property="tradeType" column="trade_type" />
+		<result property="tradePriceType" column="trade_price_type" />
+		<result property="tradePrice" column="trade_price" />
+		<result property="tradeCount" column="trade_count" />
+		<result property="tradeMoney" column="trade_money" />
+	</resultMap>
+
+</mapper>	
+
+
+

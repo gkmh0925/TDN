@@ -1,0 +1,87 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.coin.backend.mapper.UserMapper" >
+    <select id="userList" resultType="DtoUser" resultMap="userResultMap">
+        SELECT
+            *
+        FROM  user
+        ORDER BY no ASC
+    </select>
+
+    <select id="userIdList" resultType="DtoUser" resultMap="userResultMap">
+        SELECT
+            no, id, ph, mail, key_yn
+        FROM  user
+        WHERE id=#{id}
+        ORDER BY no ASC
+    </select>
+
+    <insert id="userJoin" parameterType="DtoUser" useGeneratedKeys="true" keyProperty="no">
+        INSERT INTO user(id, pw, ph, mail, c_key, s_key, key_yn, ad_yn)
+        VALUES (#{id}, #{pw}, #{ph}, #{mail}, #{cKey}, #{sKey}, #{keyYn}, #{adYn})
+    </insert>
+
+    <update id="userUpdate">
+        UPDATE user
+        SET id = #{id}, pw = #{pw}, mail = #{mail}, c_key = #{cKey}, s_key = #{sKey}, key_yn = #{keyYn}, ad_yn = #{adYn}
+        WHERE no = #{no}
+    </update>
+
+    <delete id="userDelete">
+        DELETE FROM user WHERE id = #{id}
+    </delete>
+
+
+    <select id="userLogin" resultType="DtoUser" resultMap="userResultMap" >
+        SELECT
+            no, id, ph, mail, key_yn, ad_yn
+        FROM  user
+        WHERE id=#{id} AND pw=#{pw}
+        ORDER BY no ASC
+    </select>
+
+    <select id="userKey" resultType="DtoUser" resultMap="userResultMap">
+        SELECT
+            c_key, s_key
+        FROM  user
+        WHERE id=#{id}
+    </select>
+
+    <select id="userId" resultType="DtoUser" resultMap="userResultMap">
+        SELECT
+            id, pw
+        FROM  user
+        WHERE ip=#{ip}
+    </select>
+
+    <update id="userIpUpdate">
+        UPDATE user
+        SET ip = #{ip}
+        WHERE id = #{id}
+    </update>
+
+    <update id="userKeyUpdate">
+        UPDATE user
+        SET c_key = #{cKey}, s_key = #{sKey}, key_yn = #{keyYn}
+        WHERE id = #{id}
+    </update>
+
+    <resultMap id="userResultMap" type="DtoUser">
+        <id property="no" column="no" />
+        <result property="id" column="id" />
+        <result property="pw" column="pw" />
+        <result property="ph" column="ph" />
+        <result property="mail" column="mail" />
+        <result property="cKey" column="c_key" />
+        <result property="sKey" column="s_key" />
+        <result property="keyYn" column="key_yn" />
+        <result property="adYn" column="ad_yn" />
+        <result property="ip" column="ip" />
+    </resultMap>
+
+</mapper>
+
+
+

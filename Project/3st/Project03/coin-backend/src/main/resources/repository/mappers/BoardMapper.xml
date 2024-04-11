@@ -1,0 +1,293 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.coin.backend.mapper.BoardMapper">
+
+    <!--**************************
+        *******공지게시판***********
+        **************************-->
+
+    <!--공지게시판 전체 가지고 오기 (get방식)-->
+  <!--  <select id="noticeBoardList" resultType="DtoNoticeBoard" resultMap="noticeBoardResultMap">
+        SELECT *
+        FROM noticeboard
+        ORDER BY no DESC
+    </select>-->
+
+    <!--공지게시판 페이징처리 rowNum처리(get방식)-->
+<!--    <select id="noticeBoardList" resultType="DtoNoticeBoard" resultMap="noticeBoardResultMap">
+        SET @ROWN:=0;
+        SELECT @ROWN:=@ROWN+1 AS ROWN
+		,no
+		,title
+		,writer
+		,content
+		,reg_date
+		,read_count
+		,like_count
+		,boardtype
+        FROM noticeboard
+        where (title like '%',#{word},'%' or content like '%',#{word},'%'); /*검색눌렀을 때*/
+        ORDER BY ROWN DESC
+    </select>-->
+
+    <!--공지게시판 페이징처리 rowNum처리 검색기능(get방식)-->
+    <select id="noticeBoardList" resultType="DtoNoticeBoard" parameterType="hashmap">
+    SELECT
+        no,
+        title,
+        writer,
+        content,
+        reg_date AS regDate,
+        read_count AS readCount,
+        like_count AS likeCount,
+        boardtype boardType
+    FROM noticeboard
+
+    <if test="keyword != null">
+        <if test="type == 'total'">
+            where title like concat('%',#{keyword},'%') or content like concat('%',#{keyword},'%')
+        </if>
+        <if test="type == 'title'">
+            where title like concat('%',#{keyword},'%')
+        </if>
+        <if test="type == 'content'">
+            where content like concat('%',#{keyword},'%')
+        </if>
+    </if>
+        ORDER BY no DESC
+        limit #{startRow},#{num}
+    </select>
+
+    <!--전체개수-->
+    <select id="noticeBoardCount" parameterType="hashmap" resultType="int">
+    SELECT COUNT(no)
+    FROM noticeboard
+        <if test="keyword!=null">
+            <if test="type=='total'">
+                where title like concat('%',#{keyword},'%') or content like concat('%',#{keyword},'%')
+            </if>
+            <if test="type=='title'">
+                where title like concat('%',#{keyword},'%')
+            </if>
+            <if test="type=='content'">
+                where content like concat('%',#{keyword},'%')
+            </if>
+        </if>
+    </select>
+
+    <!-- 공지게시판 no에 따른 게시글 들고오기 -->
+    <select id="noticeBoardDetail" resultType="DtoNoticeBoard" resultMap="noticeBoardResultMap">
+        SELECT *
+        FROM noticeboard
+        WHERE no =#{no}
+    </select>
+
+    <!-- 공지게시판 글쓰기-->
+    <insert id="insertNoticeBoard" parameterType="DtoNoticeBoard" useGeneratedKeys="true" keyProperty="no">
+        INSERT INTO noticeboard(title, writer, content, reg_date, read_count, like_count, boardtype)
+        VALUES (#{title}, #{writer}, #{content}, NOW(), 0, 0, #{boardTypeDB})
+        /*writer와 boardtype도 정해진 것이지만 vue에서 해주기 -> 요구사항왔을 때 수정하기 쉬움*/
+    </insert>
+
+    <!--공지게시판 수정하기-->
+    <update id="updateNoticeBoard">
+        UPDATE noticeboard
+        SET title = #{title},
+            writer = #{writer},
+            content = #{content},
+            boardtype = #{boardType}
+        WHERE no = #{no}
+    </update>
+
+    <!--공지게시판 삭제하기-->
+    <delete id="deleteNoticeBoard">
+        DELETE
+        FROM noticeboard
+        WHERE no = #{no}
+    </delete>
+
+    <!--read_count 조회수 설정-->
+    <update id="noticeReadCount">
+        UPDATE noticeboard
+        SET read_count = read_count + 1
+        WHERE no = #{no}
+    </update>
+
+    <!--좋아요 설정-->
+    <update id="noticeLikeCount">
+        UPDATE noticeboard
+        SET like_count = like_count + 1
+        WHERE no = #{no}
+    </update>
+
+    <resultMap id="noticeBoardResultMap" type="DtoNoticeBoard">
+        <id property="no" column="no"/>
+<!--        <result property="rowNum" column="ROWN"/>-->
+        <result property="title" column="title"/>
+        <result property="writer" column="writer"/>
+        <result property="content" column="content"/>
+        <result property="regDate" column="reg_date"/>
+        <result property="readCount" column="read_count"/>
+        <result property="likeCount" column="like_count"/>
+    </resultMap>
+
+
+    <!--**************************
+    *******정보게시판***********
+    **************************-->
+    <!--	정보게시판 전체 가지고 오기 (get방식)-->
+<!--    <select id="infoBoardList" resultType="DtoInfoBoard" resultMap="infoBoardResultMap">-->
+<!--        SELECT *-->
+<!--        FROM infoboard-->
+<!--        ORDER BY no DESC-->
+<!--    </select>-->
+
+    <!--공지게시판 페이징처리 rowNum처리 검색기능(get방식)-->
+    <select id="infoBoardList" resultType="DtoInfoBoard" parameterType="hashmap">
+        SELECT
+        no,
+        title,
+        writer,
+        content,
+        reg_date AS regDate,
+        read_count AS readCount,
+        like_count AS likeCount,
+        boardtype AS boardType,
+        url
+        FROM infoboard
+        <if test="keyword != null">
+            <if test="type == 'total'">
+                where title like concat('%',#{keyword},'%') or content like concat('%',#{keyword},'%')
+            </if>
+            <if test="type == 'title'">
+                where title like concat('%',#{keyword},'%')
+            </if>
+            <if test="type == 'content'">
+                where content like concat('%',#{keyword},'%')
+            </if>
+        </if>
+        ORDER BY no DESC
+        limit #{startRow},#{num}
+    </select>
+
+    <!--전체개수-->
+    <select id="infoBoardCount" parameterType="hashmap" resultType="int">
+        SELECT COUNT(no)
+        FROM infoboard
+        <if test="keyword!=null">
+            <if test="type=='total'">
+                where title like concat('%',#{keyword},'%') or content like concat('%',#{keyword},'%')
+            </if>
+            <if test="type=='title'">
+                where title like concat('%',#{keyword},'%')
+            </if>
+            <if test="type=='content'">
+                where content like concat('%',#{keyword},'%')
+            </if>
+        </if>
+    </select>
+
+    <!--정보게시판 디테일-->
+    <select id="infoBoardDetail" resultType="DtoInfoBoard" resultMap="infoBoardResultMap">
+        SELECT *
+        FROM infoboard
+        WHERE no =#{no}
+    </select>
+
+    <!--정보게시판 글쓰기-->
+    <insert id="insertInfoBoard" parameterType="DtoInfoBoard" useGeneratedKeys="true" keyProperty="no">
+        INSERT INTO infoboard(title, writer, content, reg_date, read_count, like_count, boardtype, url)
+        VALUES (#{title}, #{writer}, #{content}, NOW(), 0, 0, #{boardTypeDB}, #{url})
+    </insert>
+
+    <!--정보게시판 수정하기-->
+    <update id="updateInfoBoard">
+        UPDATE infoboard
+        SET title     = #{title},
+            writer    = #{writer},
+            content   = #{content},
+            boardtype = #{boardType}
+        WHERE no = #{no}
+    </update>
+
+    <!--정보게시판 삭제하기-->
+    <delete id="deleteInfoBoard">
+        DELETE
+        FROM infoboard
+        WHERE no = #{no}
+    </delete>
+
+    <!--read_count 조회수 설정-->
+    <update id="infoReadCount">
+        UPDATE infoboard
+        SET read_count = read_count + 1
+        WHERE no = #{no}
+    </update>
+
+    <!--좋아요 설정-->
+    <update id="infoLikeCount">
+        UPDATE infoboard
+        SET like_count = like_count + 1
+        WHERE no = #{no}
+    </update>
+
+    <resultMap id="infoBoardResultMap" type="DtoInfoBoard">
+        <id property="no" column="no"/>
+        <result property="rowNum" column="ROWN"/>
+        <result property="title" column="title"/>
+        <result property="writer" column="writer"/>
+        <result property="content" column="content"/>
+        <result property="regDate" column="reg_date"/>
+        <result property="readCount" column="read_count"/>
+        <result property="likeCount" column="like_count"/>
+        <result property="url" column="url"/>
+    </resultMap>
+
+
+    <!--**************************
+        *****정보게시판*댓글********
+        **************************-->
+    <!--게시판 번호에 따른 reply 출력-->
+    <select id="replyList" resultType="DtoReply" resultMap="replyResultMap">
+        SELECT user.id, reply.no, info_no, user_no, reply.content, reply.reg_date, like_count
+        FROM reply
+                 INNER JOIN user ON reply.user_no=user.no
+        WHERE info_no = #{no}
+        ORDER BY reg_date DESC
+    </select>
+
+    <!--댓글쓰기-->
+    <insert id="insertReply" parameterType="hashmap" useGeneratedKeys="true" keyProperty="no">
+        INSERT INTO reply(info_no, user_no, content, reg_date, like_count)
+        VALUES (#{infoNo}, #{userNo}, #{content}, NOW(), 0)
+    </insert>
+
+    <!--댓글수정-->
+    <update id="updateReply">
+        UPDATE reply
+        SET content   = #{content}
+        WHERE no = #{no}
+    </update>
+
+    <!--댓글삭제-->
+    <delete id="deleteReply">
+        DELETE
+        FROM reply
+        WHERE no = #{no}
+    </delete>
+
+    <resultMap id="replyResultMap" type="DtoReply">
+        <id property="no" column="no"/>
+        <result property="infoNo" column="info_no"/>
+        <result property="userNo" column="user_no"/>
+        <result property="content" column="content"/>
+        <result property="regDate" column="reg_date"/>
+        <result property="likeCount" column="like_count"/>
+        <result property="id" column="id"/>
+    </resultMap>
+
+
+
+</mapper>

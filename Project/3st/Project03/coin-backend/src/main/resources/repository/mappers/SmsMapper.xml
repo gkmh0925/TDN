@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.coin.backend.mapper.SmsMapper" >
+
+    <select id="smsList" resultType="DtoSms" resultMap="smsResultMap">
+        SELECT
+            *
+        FROM  api_key
+    </select>
+
+
+    <resultMap id="smsResultMap" type="DtoSms">
+        <id property="no" column="no"/>
+        <result property="insert_api_key" column="insert_api_key" />
+        <result property="insert_api_secret_key" column="insert_api_secret_key" />
+    </resultMap>
+
+</mapper>
+
+
+
