@@ -1,0 +1,2087 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="excel">
+
+	<!-- 다운로드 -->
+	<!-- 매장리스트 Excel -->
+	<select id="storeList_excel" resultType="EM_COMPANY_MASTER_OMS" parameterType="java.util.HashMap">
+		 SELECT
+            CPN_CD,
+            CPN_NM,
+            CPN_BIZ_TYPE, 
+            MFC_TP_CD, 
+            CPN_STATE, 
+            CPN_ADDR,
+            CPN_ADDR_DT,
+            CPN_TEL,
+            MNG_HPNO,
+            DAY_START_TIME,
+            DAY_END_TIME,
+            ORD_CH_NM,
+            DLV_CH_NM,
+            IN_APP,
+            REG_DATE,
+            MDF_DATE,
+            ROWNUM RN
+        FROM(
+            SELECT 
+                NVL(A.CPN_CD,' ') CPN_CD,
+                NVL(A.CPN_NM, ' ') CPN_NM,
+                NVL(A.CPN_BIZ_TYPE, ' ') CPN_BIZ_TYPE, 
+                NVL(G.DEFINITION_NM, ' ') MFC_TP_CD, 
+                NVL(B.DEFINITION_NM,' ') CPN_STATE,
+                NVL(A.CPN_ADDR,' ') CPN_ADDR,
+                NVL(A.CPN_ADDR_DT,' ') CPN_ADDR_DT,
+                NVL(A.CPN_TEL,' ') CPN_TEL,
+                NVL(A.MNG_HPNO, ' ') MNG_HPNO,
+                NVL(C.DAY_START_TIME,' ') DAY_START_TIME,
+                NVL(C.DAY_END_TIME,' ') DAY_END_TIME,
+                NVL(F.ORD_CH_NM,' ') ORD_CH_NM,
+                NVL(E.DLV_CH_NM,' ') DLV_CH_NM,
+                NVL(A.IN_APP, ' ') IN_APP,
+                NVL(A.REG_DATE,'') REG_DATE,
+                NVL(A.MDF_DATE,'') MDF_DATE
+            FROM EM_COMPANY_MASTER_OMS A
+            INNER JOIN EM_REFERENCE_CODE_OMS B ON B.DEFINITION_CD = A.CPN_STATE
+            AND B.GROUP_CD = 'CPN_STATE' AND A.CPN_TYPE = 'STORE'
+            <if test='sst!=null and !sst.equals("")'>
+                AND B.DEFINITION_CD IN (#{sst})
+            </if>
+            LEFT JOIN EM_STORE_OPERATION_OMS C ON C.STO_CD = A.CPN_CD
+            LEFT JOIN (
+                    SELECT A.STO_CD, B.CPN_NM AS DLV_CH_NM, B.CPN_CD AS DLV_CH_CD
+                    FROM EM_STORE_OPERATION_OMS A
+                    INNER JOIN EM_COMPANY_MASTER_OMS B ON B.CPN_TYPE = 'DELIVERY' AND B.CPN_CD = A.DELIVERY_CH_CD
+            ) E ON E.STO_CD = A.CPN_CD
+            LEFT JOIN (
+                SELECT 
+                    STO_CD,
+                    ORD_CH_CD,
+                    SUBSTR(
+                        XMLAGG(
+                            XMLELEMENT(COL ,',', ORD_CH_NM) ORDER BY ORD_CH_NM
+                        ).EXTRACT('//text()').GETSTRINGVAL(), 2
+                    ) AS ORD_CH_NM
+                FROM (
+                    SELECT STO_CD, CPN_NM AS ORD_CH_NM, CPN_CD AS ORD_CH_CD
+                    FROM EM_COMPANY_MASTER_OMS A 
+                    INNER JOIN EM_CHANNEL_STORE_OPERATION_OMS B
+                    ON (B.CH_CD = A.CPN_CD) AND A.CPN_TYPE = 'ORDER'
+                )
+                GROUP BY STO_CD, ORD_CH_CD
+            ) F ON F.STO_CD = A.CPN_CD
+            LEFT JOIN EM_REFERENCE_CODE_OMS G ON G.DEFINITION_CD = A.MFC_TP_CD AND G.GROUP_CD = 'MFC_TP_CD'
+            <where>
+                <if test='scd!=null and !scd.equals("")'>
+                    AND A.CPN_CD = #{scd}
+                </if>
+                <if test='occd!=null and !occd.equals("")'>
+                    AND F.ORD_CH_CD = #{occd}
+                </if>
+                <if test='dccd!=null and !dccd.equals("")'>
+                    AND E.DLV_CH_CD = #{dccd}
+                </if>
+            </where>
+        ORDER BY CPN_NM
+        )
+	</select>
+	
+	<!-- 상품리스트 Excel -->
+	<select id="productList_excel" resultType="EM_MENU_MASTER_OMS" parameterType="java.util.HashMap">
+		SELECT
+			ROWNUM RN,
+			MENU_CD,
+			MENU_NM,
+			PRICE,
+			MENU_STATE,
+			CTGR_NM,
+			REG_DATE
+		FROM(
+			SELECT
+				NVL(A.MENU_CD, ' ') MENU_CD, 
+				NVL(A.MENU_NM, ' ') MENU_NM,
+				NVL(A.PRICE, 0) PRICE,
+				NVL(B.DEFINITION_NM, ' ') MENU_STATE,
+				NVL(C.CTGR_NM, ' ') CTGR_NM,
+				NVL(A.REG_DATE, '') REG_DATE
+			FROM EM_MENU_MASTER_OMS A
+			INNER JOIN EM_REFERENCE_CODE_OMS B ON B.DEFINITION_CD = A.MENU_STATE		
+			AND B.GROUP_CD = 'AJ'
+			<if test='etyp!=null  and !etyp.equals("")'>
+		    	AND B.DEFINITION_CD = #{etyp}
+			</if>
+			INNER JOIN EM_CATEGORY_MASTER_OMS C ON C.CTGR_CD = A.CTGR_CD
+			<if test='sinp!=null and !sinp.equals("")'>
+		    	AND C.CTGR_CD = #{sinp}
+			</if>
+			LEFT OUTER JOIN EM_USER_ACCOUNT_OMS D ON (A.REG_USER_CD = D.USER_CD)
+			LEFT OUTER JOIN EM_USER_ACCOUNT_OMS E ON (A.MDF_USER_CD = E.USER_CD)
+			<if test='pcd!=null and !pcd.equals("")'>
+		    	WHERE A.MENU_CD = #{pcd}
+			</if>
+			ORDER BY C.SEQ ASC, A.SEQUENCE ASC
+		)
+	</select>
+	
+	<!-- 주문 내역 Excel -->
+	<select id="orderList_excel" resultType="TB_ORDER_STATE" parameterType="java.util.HashMap">
+		SELECT
+			ORD_ID,
+			STORE_ID,
+			STORE_NM,
+			ORD_STATE,
+			FRANCHISE_CODE,
+			ORDER_CH_NM,
+			VANDOR_CODE,
+			DELIVER_FEE,
+			ORD_ADDR,
+			ORD_ADDR_DETAIL,
+			ORD_LAND_ADDR,
+			LAND_ADDR_DETAIL,
+			PHONE,
+			LOC_LAT,
+			LOC_LNG,
+			ORD_MSG,
+			ACT_AMT,
+			TOT_AMT,
+			TOT_VAT,
+			PAY_TYPE,
+			ORD_TYPE,
+			ORD_TIME,
+			PICKUP_CODE,
+			PICKUP_NAME,
+			EXPECTED_PICKUP_TIME,
+			ORD_NOTICE,
+			DELV_YN,
+			DELV_TIME,
+			ORD_MEMO,
+			REGDATE,
+			RST_CD,
+			RST_MSG,
+			MODI_DATE,
+			DELIVERY_ID,
+			DELIVERY_VENDOR_CODE,
+			DLV_CH_NM,
+			AUTO_CANCEL_ALARM,
+			CAR_NUMBER,
+			BIZITEMID,
+			SETTLE_NO,
+			SALE_STORE,
+			DTORD_NO,
+			STATE_RESULT,
+			ROWNUM RN
+		FROM(
+			SELECT
+				NVL(A.ORD_ID, ' ') ORD_ID, -- *주문ID
+				NVL(A.STORE_ID, ' ') STORE_ID, -- *가맹점 상점ID*
+				NVL(B.CPN_NM, ' ') STORE_NM, -- *가맹점 상점명*
+				NVL(C.DEFINITION_NM, ' ') ORD_STATE, -- *주문상태*
+				NVL(A.FRANCHISE_CODE, ' ') FRANCHISE_CODE, -- *가맹점코드*
+				NVL(D.CPN_NM, ' ') ORDER_CH_NM, -- *가맹점명*
+				NVL(A.VANDOR_CODE, ' ') VANDOR_CODE, -- *요기요-Vendor*
+				NVL(A.DELIVER_FEE, 0) DELIVER_FEE, -- *배송료*
+				NVL(A.ORD_ADDR, ' ') ORD_ADDR, -- *배송지 주소[지번]*
+				NVL(A.ORD_ADDR_DETAIL, ' ') ORD_ADDR_DETAIL, -- *배성지 주소[지번]상세*
+				NVL(A.ORD_LAND_ADDR, ' ') ORD_LAND_ADDR, -- *배송지 주소[행정]*
+				NVL(A.LAND_ADDR_DETAIL, ' ') LAND_ADDR_DETAIL, -- *배송지 주소[상세]*
+				NVL(A.PHONE, ' ') PHONE, -- *배송 연락처
+				NVL(A.LOC_LAT, ' ') LOC_LAT, -- *위도정보*
+				NVL(A.LOC_LNG, ' ') LOC_LNG, -- *경도정보*
+				NVL(A.ORD_MSG, ' ') ORD_MSG, -- *고객요청사항*
+				NVL(A.ACT_AMT, 0) ACT_AMT, -- *결제금액*
+				NVL(A.TOT_AMT, 0) TOT_AMT, -- *합계금액*
+				NVL(A.TOT_VAT, 0) TOT_VAT, -- *부가세*
+				NVL(A.PAY_TYPE, ' ') PAY_TYPE, -- *결제방식*
+				NVL(E.DEFINITION_NM, ' ') ORD_TYPE, -- *주문방식*
+				NVL(A.ORD_TIME, ' ') ORD_TIME, -- *결제시간*
+				NVL(A.PICKUP_CODE, ' ') PICKUP_CODE, -- *픽업코드*
+				NVL(G.DEFINITION_NM, ' ') PICKUP_NAME, -- *픽업코드명*
+				NVL(A.EXPECTED_PICKUP_TIME, ' ') EXPECTED_PICKUP_TIME, -- *픽업예상시간*
+				NVL(A.ORD_NOTICE, ' ') ORD_NOTICE, -- *주문공지*
+				NVL(A.DELV_YN, ' ') DELV_YN, -- *배송가능여부*
+				NVL(A.DELV_TIME, ' ') DELV_TIME, -- *배송 픽업예상시간*
+				NVL(A.ORD_MEMO, ' ') ORD_MEMO, -- *주문메모*
+				NVL(A.REGDATE, '') REGDATE, -- *등록일자*
+				NVL(A.RST_CD, ' ') RST_CD, -- *처리결과코드*
+				NVL(A.RST_MSG, ' ') RST_MSG, -- *처리결과메시지*
+				NVL(A.MODI_DATE, '') MODI_DATE, -- *최종변경일시*
+				NVL(A.DELIVERY_ID, ' ') DELIVERY_ID, -- *배송번호*
+				NVL(A.DELIVERY_VENDOR_CODE, ' ') DELIVERY_VENDOR_CODE, -- *배송업체코드*
+				NVL(F.CPN_NM, ' ') DLV_CH_NM, -- *배송업체명*
+				NVL(A.AUTO_CANCEL_ALARM, ' ') AUTO_CANCEL_ALARM, -- *자동취소알람상태*
+				NVL(A.CAR_NUMBER, ' ') CAR_NUMBER, -- *차량번호*
+				NVL(A.BIZITEMID, ' ') BIZITEMID, -- *BIZITEM*
+				NVL(A.SETTLE_NO, ' ') SETTLE_NO, -- *정산주문번호*
+				NVL(A.SALE_STORE, ' ') SALE_STORE, -- *매출발생점포코드*
+				NVL(A.DTORD_NO, ' ') DTORD_NO ,-- *상세주문번호*
+				NVL(DECODE(A.ORD_STATE, 'commit', 'commit', 'cancel', 'cancel', 'error'), ' ') AS STATE_RESULT
+			FROM TB_ORDER_STATE A
+			LEFT JOIN EM_COMPANY_MASTER_OMS B ON B.CPN_CD = A.STORE_ID AND B.CPN_TYPE = 'STORE'
+			LEFT JOIN EM_REFERENCE_CODE_OMS C ON C.DEFINITION_CD = A.ORD_STATE AND C.GROUP_CD = 'T_ORD_STATE'
+			INNER JOIN EM_COMPANY_MASTER_OMS D ON D.CPN_CD = A.FRANCHISE_CODE AND D.CPN_TYPE = 'ORDER'
+			<if test='occd!=null and !occd.equals("")'>
+		    	AND D.CPN_CD = #{occd}
+			</if>
+			LEFT JOIN EM_REFERENCE_CODE_OMS E ON E.DEFINITION_CD = A.ORD_TYPE AND E.GROUP_CD = 'ORD_TYPE'
+			LEFT JOIN EM_COMPANY_MASTER_OMS F ON F.CPN_CD = A.DELIVERY_VENDOR_CODE AND F.CPN_TYPE = 'DELIVERY'
+			LEFT JOIN EM_REFERENCE_CODE_OMS G ON G.DEFINITION_CD = A.PICKUP_CODE AND G.GROUP_CD = 'PICKUP_CODE'
+			<![CDATA[
+				WHERE SUBSTR(A.ORD_TIME, 0, 8) BETWEEN #{sdate} AND #{edate}
+			]]>
+			<if test='scd!=null and !scd.equals("")'>
+				AND A.STORE_ID = #{scd}
+			</if>
+			<if test='ono!=null and !ono.equals("")'>
+		    	AND A.ORD_ID LIKE '%'||#{ono}
+			</if>
+			<if test='chono!=null and !chono.equals("")'>
+		    	AND A.DTORD_NO LIKE '%'||#{chono}
+			</if>
+			<if test='ordst!=null and !ordst.equals("")'>
+			    <choose>
+			        <when test="ordst.equals('Success')">
+			            AND A.ORD_STATE != 'cancel'
+			        </when>
+			        <when test="ordst.equals('Canceled')">
+			            AND A.ORD_STATE = 'cancel'
+			        </when>
+			        <otherwise>
+			            AND A.ORD_STATE = #{ordst}
+			        </otherwise>
+			    </choose>
+			</if>
+			ORDER BY A.REGDATE DESC, ORD_TIME DESC
+		)
+	</select>
+	
+	<!-- 포스 내역 Excel -->
+	<select id="posList_excel" resultType="EM_SETTLE_POS_ORD_OMS" parameterType="java.util.HashMap">
+		SELECT
+			ORD_DT,
+			CHNEL_CD,
+			CHNEL_NM,
+			STR_CD,
+			STR_NM,
+			CH_ORD_NO,
+			SALE_STORE,
+			SALE_STORE_NM,
+			DTORD_NO,
+			EM_ORD_NO,
+			TRANL_CD,
+			ORD_AMT,
+			ORD_STAT,
+			NPAY_ORD_NO,
+			PICKUP_CD,
+			MFC_TP_CD,
+			USER_NM,
+			REG_DATE,
+			STATE_RESULT,
+			ROWNUM RN
+		FROM(
+			SELECT
+				NVL(A.ORD_DT, ' ') ORD_DT,  -- 주문일자(PK)
+				NVL(A.CHNEL_CD, ' ') CHNEL_CD,  -- 제휴사구분코드(PK)
+				NVL(B.CPN_NM, ' ') CHNEL_NM,  -- 제휴사구분코드명
+				NVL(A.STR_CD, ' ') STR_CD,  -- 점포코드(PK)
+				NVL(C.CPN_NM, ' ') STR_NM,  -- 점포명
+				NVL(A.CH_ORD_NO, ' ') CH_ORD_NO,    -- 채널사주문번호(PK)
+				NVL(A.SALE_STORE, ' ') SALE_STORE,  -- 매출발생점포코드(PK)
+				NVL(F.CPN_NM, ' ') SALE_STORE_NM,  -- 매출발생점포명(PK)
+				NVL(A.DTORD_NO, ' ') DTORD_NO,  -- 상세주문번호(PK)
+				NVL(A.EM_ORD_NO, ' ') EM_ORD_NO,    -- 이마트주문번호(PK)
+				NVL(E.CPN_NM, A.TRANL_CD) TRANL_CD,  -- 배송업체
+				NVL(A.ORD_AMT, '') ORD_AMT,    -- 주문금액(배달비제외)
+				--NVL(D.DEFINITION_NM, ' ') ORD_STAT,  -- 주문상태
+				NVL(A.ORD_STAT, ' ') ORD_STAT,  -- 주문상태
+				NVL(A.NPAY_ORD_NO, ' ') NPAY_ORD_NO,    -- 네이버 NPAY번호
+				NVL(H.DEFINITION_NM, ' ') PICKUP_CD,    -- 픽업코드
+				NVL(I.DEFINITION_NM, ' ') MFC_TP_CD,    -- MFC구분
+				NVL(G.USER_NM, ' ') USER_NM,    -- 사용자코드
+				NVL(A.REG_DATE, '') REG_DATE,   -- 등록일시
+				NVL(J.DEFINITION_NM, ' ') AS STATE_RESULT
+			FROM EM_SETTLE_POS_ORD_OMS A
+			INNER JOIN EM_COMPANY_MASTER_OMS B ON (B.CPN_CD = A.CHNEL_CD AND B.CPN_TYPE = 'ORDER')
+			<if test='occd!=null and !occd.equals("")'>
+				AND B.CPN_CD = #{occd}
+			</if>
+			LEFT JOIN EM_COMPANY_MASTER_OMS C ON (C.CPN_CD = A.STR_CD AND C.CPN_TYPE = 'STORE')
+			LEFT JOIN EM_REFERENCE_CODE_OMS D ON (D.DEFINITION_CD = A.ORD_STAT AND D.GROUP_CD = 'P_ORD_STAT')
+			LEFT JOIN EM_COMPANY_MASTER_OMS E ON (E.CPN_CD = A.TRANL_CD AND E.CPN_TYPE = 'DELIVERY')
+			LEFT JOIN EM_COMPANY_MASTER_OMS F ON (F.CPN_CD = A.SALE_STORE AND F.CPN_TYPE = 'STORE')
+			LEFT JOIN EM_USER_ACCOUNT_OMS G ON (G.USER_CD = A.USER_CD)
+			LEFT JOIN EM_REFERENCE_CODE_OMS H ON (H.DEFINITION_CD = A.PICKUP_CD AND H.GROUP_CD = 'PICKUP_CD')
+			LEFT JOIN EM_REFERENCE_CODE_OMS I ON (I.DEFINITION_CD = A.MFC_TP_CD AND I.GROUP_CD = 'MFC_TP_CD')
+			LEFT JOIN EM_REFERENCE_CODE_OMS J ON(A.ORD_STAT = J.DEFINITION_CD AND J.GROUP_CD = 'STATE_RESULT')
+			<![CDATA[
+				WHERE A.ORD_DT BETWEEN #{sdate} AND #{edate}
+			]]>
+			<choose>
+				<when test="stype.equals('nomal')">
+					AND A.MFC_TP_CD = '0'
+					<if test='scd!=null and !scd.equals("")'>
+						AND A.STR_CD = #{scd}
+					</if>
+				</when>
+				<when test="stype.equals('bsdc')">
+					AND A.MFC_TP_CD NOT IN ('0')
+					<if test='scd!=null and !scd.equals("")'>
+						AND A.SALE_STORE = #{scd}
+					</if>
+				</when>
+				<otherwise>
+					<if test='scd!=null and !scd.equals("")'>
+						AND A.SALE_STORE = #{scd}
+					</if>
+				</otherwise>
+			</choose>
+			<if test='ono!=null and !ono.equals("")'>
+				AND A.DTORD_NO LIKE '%'||#{ono}
+			</if>
+			<if test='chono!=null and !chono.equals("")'>
+				AND A.CH_ORD_NO LIKE '%'||#{chono}
+			</if>
+			<if test='emono!=null and !emono.equals("")'>
+				AND A.EM_ORD_NO LIKE '%'||#{emono}
+			</if>
+			<if test='ordst!=null and !ordst.equals("")'>
+                   AND A.ORD_STAT = #{ordst}
+			</if>
+			ORDER BY A.ORD_DT DESC, A.REG_DATE DESC
+		)
+	</select>	
+	
+	
+	<!-- 채널사,배달대행사 페이지 엑셀 다운로드 -->
+	<select id="channel_excel" resultType="EM_COMPANY_MASTER_OMS" parameterType="java.util.HashMap">
+		 SELECT
+            CPN_CD,
+            CPN_NM, 
+            CPN_STATE,
+            CPN_BIZ_NO,
+            CEO_NM, 
+            CPN_ADDR_DT,
+            CPN_TEL,
+            MNG_NM,
+            MNG_HPNO,
+            EMAIL,
+            IN_APP,
+            REG_DATE,
+            ROWNUM RN
+        FROM(
+            SELECT 
+                NVL(A.CPN_CD,' ') CPN_CD,      			-- 업체코드
+                NVL(A.CPN_NM, ' ') CPN_NM,				-- 업체명
+                NVL(B.DEFINITION_NM,' ') CPN_STATE,		-- 업체상태명(오픈,중지)
+                NVL(A.CPN_BIZ_NO, ' ') CPN_BIZ_NO,		-- 사업자 번호
+                NVL(A.CEO_NM,' ') CEO_NM, 				-- 대표자명
+                NVL(A.CPN_ADDR_DT,' ') CPN_ADDR_DT,		-- 업체상세주소
+                NVL(A.CPN_TEL,' ') CPN_TEL,				-- 전화번호
+                NVL(A.MNG_NM, ' ') MNG_NM,				-- 점장명
+                NVL(A.MNG_HPNO, ' ') MNG_HPNO,			-- 휴대폰번호(점장)
+                NVL(A.EMAIL,' ') EMAIL,					-- 이메일
+                NVL(A.IN_APP, ' ') IN_APP,				-- 인앱여부
+                NVL(A.REG_DATE,'') REG_DATE,			-- 등록일시
+                NVL(A.MDF_DATE,'') MDF_DATE				-- 수정일시
+            FROM EM_COMPANY_MASTER_OMS A
+            INNER JOIN EM_REFERENCE_CODE_OMS B ON B.DEFINITION_CD = A.CPN_STATE
+            AND B.GROUP_CD = 'CPN_STATE' AND A.CPN_TYPE = #{cpntype}
+            <!-- 업체상태구분 (오픈,중지) -->
+            <if test='sst!=null and !sst.equals("")'>
+                AND B.DEFINITION_CD IN (#{sst})
+            </if>
+            <!-- 채널사 검색시 검색된 업체코드 -->
+            <if test='occd!=null and !occd.equals("")'>
+                AND A.CPN_CD IN (#{occd})
+            </if><!-- 배달사 검색시 검색된 업체코드 -->
+            <if test='dccd!=null and !dccd.equals("")'>
+                AND A.CPN_CD IN (#{dccd})
+            </if>
+        ORDER BY CPN_CD
+        )
+	</select>
+	
+	<!-- 요기요 주문배달 엑셀 다운로드 --> 
+	<select id="getExcelData_RELAY" resultType="EM_RELAY_TOTAL_OMS" parameterType="java.util.HashMap">
+	
+	SELECT 
+				SETTLE_MONTH ,  
+				SET_RELAY_SEQ , 
+				 A.CPN_CD ,   
+				 CPN_NM ,     
+				 NVL(ORD_ID, ' ') ORD_ID ,     
+				 NVL(ORD_DATE, ' ') ORD_DATE ,     
+				 NVL(DELIVERY_DATE, ' ') DELIVERY_DATE ,    
+				 NVL(KIS_FEE, 0) KIS_FEE,     
+				 NVL(APPLY_GUBUN, ' ') APPLY_GUBUN ,   
+				 B.USER_NM ,
+				 A.USER_CD,  
+				 A.REG_DATE   
+			FROM  EM_RELAY_TOTAL_OMS A
+			INNER JOIN EM_USER_ACCOUNT_OMS B ON  A.USER_CD = B.USER_CD 
+		<![CDATA[
+			WHERE A.SETTLE_MONTH = #{tmonth}
+		]]>
+			ORDER BY A.ORD_DATE, A.DELIVERY_DATE, CPN_CD 
+		
+	</select>
+	
+	
+	<!-- 요기요 주문배달 엑셀 다운로드 --> 
+	<select id="getExcelData_YGYD" resultType="EM_SETTLE_YOGIYO_DV_ORD_OMS" parameterType="java.util.HashMap">
+		SELECT
+			NVL(A.ORD_DATE, ' ') ORD_DATE,  -- 주문일자(PK)
+            NVL(A.ORD_ID, ' ') ORD_ID,  -- 주문ID(PK)
+            NVL(A.CH_ORD_NO, ' ') CH_ORD_NO,    -- 채널사주문ID(PK)
+            NVL(A.STORE_ID, ' ') STORE_ID,  -- 매장코드(PK)
+            NVL(A.CH_CD, ' ') CH_CD,    -- 채널사코드(PK)
+            NVL(A.SET_YOGIYO_DV_SEQ, '') SET_YOGIYO_DV_SEQ,    -- 요기요 배달 시퀀스(PK)
+            NVL(A.ORD_TIME, ' ') ORD_TIME,  -- 주문일시
+            NVL(A.REFUND_TIME, ' ') REFUND_TIME,    -- 환불일시
+            NVL(A.PAY_EXPECTED_DATE, ' ') PAY_EXPECTED_DATE,    -- 지급예정 일자
+            NVL(A.BIZ_NO, ' ') BIZ_NO,  -- 사업자번호
+            NVL(A.STORE_NM, ' ') STORE_NM,  -- 음식점명
+            NVL(A.ORD_NO, ' ') ORD_NO,  -- 주문번호
+            NVL(A.ITEM_SUM_AMT, 0) ITEM_SUM_AMT,  -- 상품가 합계
+            NVL(A.MIN_ORD_ADD_PAY, 0) MIN_ORD_ADD_PAY,    -- 최소주문 추가결제액
+            NVL(A.DELIVER_FEE, 0) DELIVER_FEE,    -- 배달료
+            NVL(A.ORD_TOT_AMT, 0) ORD_TOT_AMT,    -- 주문 총액
+            NVL(A.ORD_ONLINE_AMT, 0) ORD_ONLINE_AMT,  -- 주문 금액 구분 : 온라인 주문
+            NVL(A.ORD_OFFLINE_AMT, 0) ORD_OFFLINE_AMT,    -- 주문 금액 구분 : 현장 주문
+            NVL(A.RESTAURANT_SELF_DIS, 0) RESTAURANT_SELF_DIS,    -- 레스토랑 자체할인
+            NVL(A.PMT_DIS_YOGIYO_LEVY_AMT, 0) PMT_DIS_YOGIYO_LEVY_AMT,    -- 프로모션 할인금액 : 요기요 부담
+            NVL(A.PMT_DIS_FRANCHISEE_LEVY_AMT, 0) PMT_DIS_FRANCHISEE_LEVY_AMT,    -- 프로모션 할인금액 : 프랜차이즈 부담
+            NVL(A.PMT_DIS_RESTAURANT_LEVY_AMT, 0) PMT_DIS_RESTAURANT_LEVY_AMT,    -- 프로모션 할인금액 : 레스토랑 부담
+            NVL(A.ORD_RELAY_FEE_RATE, ' ') ORD_RELAY_FEE_RATE,  -- 주문중개이용료 : 주문중개이용료율(+VAT)
+            NVL(A.ORD_RELAY_FEE_TOT_AMT, 0) ORD_RELAY_FEE_TOT_AMT,    -- 주문중개이용료 : 주문중개이용료 총액
+            NVL(A.PAY_RELAY_FEE_RATE, ' ') PAY_RELAY_FEE_RATE,  -- 결제이용료 : 결제이용료율(+VAT)
+            NVL(A.PAY_RELAY_FEE_TOT_AMT, 0) PAY_RELAY_FEE_TOT_AMT,    -- 결제이용료 : 결제이용료 총액
+            NVL(A.DELIVERY_AGENT_FEE, 0) DELIVERY_AGENT_FEE,  -- 배달대행이용료 : 배달대행이용료 총액
+            NVL(A.TOT_SUM_FEE, 0) TOT_SUM_FEE,    -- 이용료 전체 합계
+            NVL(A.OD_DELI_FEE_REST_SELF_FUND, 0) OD_DELI_FEE_REST_SELF_FUND,  -- OD배달료 매출 : 레스토랑 자체펀딩 총액
+            NVL(A.YO_TIME_FEE_TOT_YO_TIME_FEE, 0) YO_TIME_FEE_TOT_YO_TIME_FEE,    -- 요타임딜이용료 : 요타임딜이용료 총액
+            NVL(A.REFERRAL_ADVERTISEMENT_FEE, 0) REFERRAL_ADVERTISEMENT_FEE, -- 추천광고이용료 : 추천광고이용료 총액
+            NVL(A.SETTLE_AMT, 0) SETTLE_AMT,  -- 정산 금액
+            NVL(A.PAY_TYPE, ' ') PAY_TYPE,  -- 결제유형
+            NVL(A.PAY_TYPE_DETAIL, ' ') PAY_TYPE_DETAIL,    -- 결제유형 상세
+            NVL(A.PAY_FORM, ' ') PAY_FORM,  -- 결제형태
+            NVL(A.PAY_FORM_DETAIL, ' ') PAY_FORM_DETAIL,    -- 결제형태 상세
+            NVL(A.DELIVERY_TYPE, ' ') DELIVERY_TYPE,    -- 배달 유형(VD/OD)
+            NVL(A.FRANCHISEE_ID, ' ') FRANCHISEE_ID,    -- 프랜차이즈 ID
+            NVL(A.CPN_NM, ' ') CPN_NM,  -- 회사명
+            NVL(A.BIZ_NM, ' ') BIZ_NM,  -- 사업자명
+            NVL(A.DELIVERY_ADDRESS1, ' ') DELIVERY_ADDRESS1,    -- 배달주소1
+            NVL(B.USER_NM, ' ') USER_NM,    -- 사용자명
+            NVL(A.REG_DATE, '') REG_DATE  -- 등록일시
+		FROM EM_SETTLE_YOGIYO_DV_ORD_OMS A
+        INNER JOIN EM_USER_ACCOUNT_OMS B
+        ON (B.USER_CD = A.USER_CD)
+        <![CDATA[
+			WHERE A.SETTLE_MONTH = #{tmonth}
+		]]>
+		<!-- <if test='scd!=null and !scd.equals("")'>
+			AND A.STORE_ID = #{scd}
+		</if>
+		<if test='ono!=null and !ono.equals("")'>
+	    	AND A.ORD_ID LIKE '%'||#{ono}
+		</if>
+		<if test='chono!=null and !chono.equals("")'>
+	    	AND A.CH_ORD_NO LIKE '%'||#{chono}
+		</if> -->
+		ORDER BY A.ORD_DATE
+	</select>
+	
+	<!-- 요기요 주문픽업 엑셀 다운로드 --> 
+	<select id="getExcelData_YGYP" resultType="EM_SETTLE_YOGIYO_PU_ORD_OMS" parameterType="java.util.HashMap">
+		SELECT
+			NVL(A.ORD_DATE, ' ') ORD_DATE,  -- 주문일자(PK)
+            NVL(A.ORD_ID, ' ') ORD_ID,  -- 주문ID(PK)
+            NVL(A.CH_ORD_NO, ' ') CH_ORD_NO,    -- 채널사주문ID(PK)
+            NVL(A.STORE_ID, ' ') STORE_ID,  -- 매장코드(PK)
+            NVL(A.CH_CD, ' ') CH_CD,    -- 채널사코드(PK)
+            NVL(A.SET_YOGIYO_PU_SEQ, '') SET_YOGIYO_PU_SEQ,    -- 요기요 배달 시퀀스(PK)
+            NVL(A.ORD_TIME, ' ') ORD_TIME,  -- 주문일시
+            NVL(A.REFUND_TIME, ' ') REFUND_TIME,    -- 환불일시
+            NVL(A.PAY_EXPECTED_DATE, ' ') PAY_EXPECTED_DATE,    -- 지급예정 일자
+            NVL(A.BIZ_NO, ' ') BIZ_NO,  -- 사업자번호
+            NVL(A.STORE_NM, ' ') STORE_NM,  -- 음식점명
+            NVL(A.ORD_NO, ' ') ORD_NO,  -- 주문번호
+            NVL(A.ITEM_SUM_AMT, 0) ITEM_SUM_AMT,  -- 상품가 합계
+            NVL(A.MIN_ORD_ADD_PAY, 0) MIN_ORD_ADD_PAY,    -- 최소주문 추가결제액
+            NVL(A.DELIVER_FEE, 0) DELIVER_FEE,    -- 배달료
+            NVL(A.ORD_TOT_AMT, 0) ORD_TOT_AMT,    -- 주문 총액
+            NVL(A.ORD_ONLINE_AMT, 0) ORD_ONLINE_AMT,  -- 주문 금액 구분 : 온라인 주문
+            NVL(A.ORD_OFFLINE_AMT, 0) ORD_OFFLINE_AMT,    -- 주문 금액 구분 : 현장 주문
+            NVL(A.RESTAURANT_SELF_DIS, 0) RESTAURANT_SELF_DIS,    -- 레스토랑 자체할인
+            NVL(A.PMT_DIS_YOGIYO_LEVY_AMT, 0) PMT_DIS_YOGIYO_LEVY_AMT,    -- 프로모션 할인금액 : 요기요 부담
+            NVL(A.PMT_DIS_FRANCHISEE_LEVY_AMT, 0) PMT_DIS_FRANCHISEE_LEVY_AMT,    -- 프로모션 할인금액 : 프랜차이즈 부담
+            NVL(A.PMT_DIS_RESTAURANT_LEVY_AMT, 0) PMT_DIS_RESTAURANT_LEVY_AMT,    -- 프로모션 할인금액 : 레스토랑 부담
+            NVL(A.ORD_RELAY_FEE_RATE, ' ') ORD_RELAY_FEE_RATE,  -- 주문중개이용료 : 주문중개이용료율(+VAT)
+            NVL(A.ORD_RELAY_FEE_TOT_AMT, 0) ORD_RELAY_FEE_TOT_AMT,    -- 주문중개이용료 : 주문중개이용료 총액
+            NVL(A.PAY_RELAY_FEE_RATE, ' ') PAY_RELAY_FEE_RATE,  -- 결제이용료 : 결제이용료율(+VAT)
+            NVL(A.PAY_RELAY_FEE_TOT_AMT, 0) PAY_RELAY_FEE_TOT_AMT,    -- 결제이용료 : 결제이용료 총액
+            NVL(A.DELIVERY_AGENT_FEE, 0) DELIVERY_AGENT_FEE,  -- 배달대행이용료 : 배달대행이용료 총액
+            NVL(A.TOT_SUM_FEE, 0) TOT_SUM_FEE,    -- 이용료 전체 합계
+            NVL(A.OD_DELI_FEE_REST_SELF_FUND, 0) OD_DELI_FEE_REST_SELF_FUND,  -- OD배달료 매출 : 레스토랑 자체펀딩 총액
+            NVL(A.YO_TIME_FEE_TOT_YO_TIME_FEE, 0) YO_TIME_FEE_TOT_YO_TIME_FEE,    -- 요타임딜이용료 : 요타임딜이용료 총액
+            NVL(A.REFERRAL_ADVERTISEMENT_FEE, 0) REFERRAL_ADVERTISEMENT_FEE, -- 추천광고이용료 : 추천광고이용료 총액
+            NVL(A.SETTLE_AMT, 0) SETTLE_AMT,  -- 정산 금액
+            NVL(A.PAY_TYPE, ' ') PAY_TYPE,  -- 결제유형
+            NVL(A.PAY_TYPE_DETAIL, ' ') PAY_TYPE_DETAIL,    -- 결제유형 상세
+            NVL(A.PAY_FORM, ' ') PAY_FORM,  -- 결제형태
+            NVL(A.PAY_FORM_DETAIL, ' ') PAY_FORM_DETAIL,    -- 결제형태 상세
+            NVL(A.DELIVERY_TYPE, ' ') DELIVERY_TYPE,    -- 배달 유형(VD/OD)
+            NVL(A.FRANCHISEE_ID, ' ') FRANCHISEE_ID,    -- 프랜차이즈 ID
+            NVL(A.CPN_NM, ' ') CPN_NM,  -- 회사명
+            NVL(A.BIZ_NM, ' ') BIZ_NM,  -- 사업자명
+            NVL(A.DELIVERY_ADDRESS1, ' ') DELIVERY_ADDRESS1,    -- 배달주소1
+            NVL(B.USER_NM, ' ') USER_NM,    -- 사용자명
+            NVL(A.REG_DATE, '') REG_DATE  -- 등록일시
+		FROM EM_SETTLE_YOGIYO_PU_ORD_OMS A
+        INNER JOIN EM_USER_ACCOUNT_OMS B
+        ON (B.USER_CD = A.USER_CD)
+        <![CDATA[
+			WHERE A.SETTLE_MONTH = #{tmonth}
+		]]>
+		<!-- <if test='scd!=null and !scd.equals("")'>
+			AND A.STORE_ID = #{scd}
+		</if>
+		<if test='ono!=null and !ono.equals("")'>
+	    	AND A.ORD_ID LIKE '%'||#{ono}
+		</if>
+		<if test='chono!=null and !chono.equals("")'>
+	    	AND A.CH_ORD_NO LIKE '%'||#{chono}
+		</if> -->
+		ORDER BY A.ORD_DATE
+	</select>
+	
+	<!-- 카카오 엑셀 다운로드 -->
+	<select id="getExcelData_KAKAO" resultType="EM_SETTLE_KAKAO_DV_ORD_OMS" parameterType="java.util.HashMap">
+		SELECT
+			NVL(A.ORD_DATE, ' ') ORD_DATE,	--주문일자
+			NVL(A.ORD_ID, ' ') ORD_ID,	--주문ID
+			NVL(A.CH_ORD_NO, ' ') CH_ORD_NO,	--카카오주문번호
+			NVL(A.STORE_ID, ' ') STORE_ID,	--매장코드
+			NVL(A.CH_CD, ' ') CH_CD,	--채널사코드
+			NVL(A.SET_KAKAO_DV_SEQ, '') SET_KAKAO_DV_SEQ,	--카카오 배달 시퀀스
+			NVL(A.BRAND_NM, ' ') BRAND_NM,	--브랜드명
+			NVL(A.STORE_NM, ' ') STORE_NM,	--매장명
+			NVL(A.ORD_TIME, ' ') ORD_TIME,	--주문일시
+			NVL(A.ADJUSTMENT_DATE, ' ') ADJUSTMENT_DATE,	--조정일자
+			NVL(A.CMD_ORD_NO, ' ') CMD_ORD_NO,	--CMS주문번호
+			NVL(A.ORD_AMT, 0) ORD_AMT,	--주문금액
+			NVL(A.DELIVER_FEE, 0) DELIVER_FEE,	--배달료
+			NVL(A.DIS_AMT, 0) DIS_AMT,	--할인금액
+			NVL(A.ACT_AMT, 0) ACT_AMT,	--결제금액
+			NVL(A.CANCEL_AMT, 0) CANCEL_AMT,	--취소금액
+			NVL(A.PAY_TYPE, ' ') PAY_TYPE,	--결제수단
+			NVL(A.PREPAID_CARD, 0) PREPAID_CARD,	--선결제카드
+			NVL(A.PREPAID_KAKAO_PAY, 0) PREPAID_KAKAO_PAY,	--선결제카카오페이
+			NVL(A.PREPAID_KAKAO_MONEY, 0) PREPAID_KAKAO_MONEY,	--선결제카카오머니
+			NVL(A.AFTER_PAY, 0) AFTER_PAY,	--후결제
+			NVL(A.BRAND_LEVY_AMT, 0) BRAND_LEVY_AMT,	--브랜드 부담금
+			NVL(A.KAKAO_LEVY_AMT, 0) KAKAO_LEVY_AMT,	--카카오 부담금
+			NVL(A.FRANCHISEE_LEVY_AMT, 0) FRANCHISEE_LEVY_AMT,	--가맹점 부담금
+			NVL(A.ETC_LEVY_AMT, 0) ETC_LEVY_AMT,	--기타 부담금
+			NVL(A.CNT_ORD_RELAY_CMS, 0) CNT_ORD_RELAY_CMS,	-- CNT 주문중개 수수료
+			NVL(A.KAKAO_ORD_RELAY_CMS, 0) KAKAO_ORD_RELAY_CMS,	-- 카카오 주문중개 수수료 
+			NVL(A.ORD_RELAY_CMS_SUM, 0) ORD_RELAY_CMS_SUM,	--주문중개 수수료 합
+			NVL(A.CNT_DIS_RELAY_CMS, 0) CNT_DIS_RELAY_CMS,	--CNT 할인중개 수수료
+			NVL(A.KAKAO_DIS_RELAY_CMS, 0) KAKAO_DIS_RELAY_CMS,	-- 카카오 할인중개 수수료
+			NVL(A.DIS_RELAY_CMS_SUM, 0) DIS_RELAY_CMS_SUM,	--할인중개 수수료 합
+			NVL(A.INICIS_CMS, 0) INICIS_CMS,	--아니시스 수수료
+			NVL(A.KAKAO_PAY_CMS, 0) KAKAO_PAY_CMS,	--카카오페이 수수료
+			NVL(A.PG_CMS, 0) PG_CMS,	--PG 수수료
+			NVL(A.INICIS_BACK_CMS, 0) INICIS_BACK_CMS,	--이니시스 백마진
+			NVL(A.E_CUPON_CMS, 0) E_CUPON_CMS,	--E쿠폰수수료
+			NVL(A.TOT_CMS_AMT, 0) TOT_CMS_AMT,	--수수료총액
+			NVL(A.DEPOSIT_AMT, 0) DEPOSIT_AMT,	--입급액
+			NVL(B.USER_NM, ' ') USER_NM,	--등록자명
+			NVL(A.REG_DATE, '') REG_DATE	--등록일시
+		FROM EM_SETTLE_KAKAO_DV_ORD_OMS A
+        INNER JOIN EM_USER_ACCOUNT_OMS B
+        ON (B.USER_CD = A.USER_CD)
+        <![CDATA[
+			WHERE A.SETTLE_MONTH = #{tmonth}
+		]]>
+		<!-- <if test='scd!=null and !scd.equals("")'>
+			AND A.STORE_ID = #{scd}
+		</if>
+		<if test='ono!=null and !ono.equals("")'>
+	    	AND A.ORD_ID LIKE '%'||#{ono}
+		</if>
+		<if test='chono!=null and !chono.equals("")'>
+	    	AND A.CH_ORD_NO LIKE '%'||#{chono}
+		</if> -->
+		ORDER BY A.ORD_DATE
+	</select>
+	
+	<!-- NAVER 엑셀 다운로드 -->
+	<select id="getExcelData_NAVER" resultType="EM_SETTLE_NAVER_ORD_OMS" parameterType="java.util.HashMap">
+		SELECT
+            NVL(A.SETTLE_NO, ' ') SETTLE_NO,    --주문번호(PK)
+            NVL(A.ITEM_ORD_ID, ' ') ITEM_ORD_ID,    --상품주문번호(PK)
+            NVL(A.CH_CD, ' ') CH_CD,    --채널사코드(PK)
+            NVL(A.SET_NAVER_SEQ, '') SET_NAVER_SEQ,	--네이버 배달 시퀀스(PK)
+            NVL(A.GUBUN, ' ') GUBUN,    --구분
+            NVL(A.ITEM_NM, ' ') ITEM_NM,    --상품명
+            NVL(A.BUYER_NM, ' ') BUYER_NM,  --구매자명
+            NVL(A.SETTLE_EXPECTED_DATE, ' ') SETTLE_EXPECTED_DATE,  --정산예정일
+            NVL(A.SETTLE_COMPLET_DATE, ' ') SETTLE_COMPLET_DATE,    --정산완료일
+            NVL(A.ORD_DATE, ' ') ORD_DATE,  --정산기준일(PK)
+            NVL(A.TAX_RETURN_DATE, ' ') TAX_RETURN_DATE,    --세금신고기준일
+            NVL(A.SETTLE_STATE, ' ') SETTLE_STATE,  --정산상태
+            NVL(A.ACT_AMT, 0) ACT_AMT,    --결제금액(A)
+            NVL(A.CMS_GUBUN, ' ') CMS_GUBUN,    -- 수수료구분
+            NVL(A.PAY_TYPE, ' ') PAY_TYPE,    -- 결제수단
+            NVL(A.SALE_LINK_CMS_GUBUN, ' ') SALE_LINK_CMS_GUBUN,    --매출연동 수수료 상세
+            NVL(A.SALE_LINK_CMS, 0) SALE_LINK_CMS,    --수수료 금액
+            NVL(B.USER_NM, ' ') USER_NM,	--등록자명
+			NVL(A.REG_DATE, '') REG_DATE	--등록일시
+		FROM EM_SETTLE_NAVER_ORD_OMS A
+        INNER JOIN EM_USER_ACCOUNT_OMS B
+        ON (B.USER_CD = A.USER_CD)
+        <![CDATA[
+			WHERE A.SETTLE_MONTH = #{tmonth}
+		]]>
+		<!-- <if test='ono!=null and !ono.equals("")'>
+	    	AND A.SETTLE_NO LIKE '%'||#{ono}
+		</if>
+		<if test='chono!=null and !chono.equals("")'>
+	    	AND A.ITEM_ORD_ID LIKE '%'||#{chono}
+		</if> -->
+		ORDER BY A.ORD_DATE
+	</select>
+
+	<!-- KIS 엑셀 다운로드 -->
+	<select id="getExcelData_KIS" resultType="EM_SETTLE_KISAPP_ORD_OMS" parameterType="java.util.HashMap">
+		SELECT
+			NVL(A.ORD_DATE, ' ') ORD_DATE,  -- 주문일자(PK)
+            NVL(A.DTORD_NO, ' ') DTORD_NO,  -- 상세주문번호(PK)
+            NVL(A.CH_ORD_NO, ' ') CH_ORD_NO,    -- 주문번호(PK)
+            NVL(A.STORE_ID, ' ') STORE_ID,  -- 점포코드(PK)
+            NVL(A.CH_CD, ' ') CH_CD,  -- 채널사코드(PK)
+            NVL(A.SET_KISAPP_SEQ, '') SET_KISAPP_SEQ,  -- 키스 앱 시퀀스(PK)
+            NVL(A.GUBUN, ' ') GUBUN,    -- 구분
+            NVL(A.CH_NM, ' ') CH_NM,    -- 채널사명
+            NVL(A.ORD_TIME, ' ') ORD_TIME,  -- 주문일시
+            NVL(A.PAY_EXPECTED_DATE, ' ') PAY_EXPECTED_DATE,    -- 지급예정일
+            NVL(A.BIZ_NO, ' ') BIZ_NO,  -- 사업자번호
+            NVL(A.STORE_NM, ' ') STORE_NM,  -- 점포명
+            NVL(A.MENU_TOT_AMT, 0) MENU_TOT_AMT,    -- 상품가합계
+            NVL(A.DELIVER_FEE, 0) DELIVER_FEE,  -- 배달료
+            NVL(A.ACT_AMT, 0) ACT_AMT,  -- 결제금액
+            NVL(A.CMS_AMT, 0) CMS_AMT,  -- 수수료
+            NVL(A.VAT_AMT, 0) VAT_AMT,  -- VAT
+            NVL(A.PAY_AMT, 0) PAY_AMT,  -- 지급액
+            NVL(A.BIGO, 0) BIGO,  -- 비고
+            NVL(B.USER_NM, ' ') USER_NM,  -- 사용자코드
+            NVL(A.REG_DATE, '') REG_DATE  -- 등록일시
+		FROM EM_SETTLE_KISAPP_ORD_OMS A
+        INNER JOIN EM_USER_ACCOUNT_OMS B
+        ON (B.USER_CD = A.USER_CD)
+        <![CDATA[
+			WHERE A.SETTLE_MONTH = #{tmonth}
+		]]>
+		<!-- <if test='scd!=null and !scd.equals("")'>
+			AND A.STORE_ID = #{scd}
+		</if>
+		<if test='ono!=null and !ono.equals("")'>
+	    	AND A.DTORD_NO LIKE '%'||#{ono}
+		</if>
+		<if test='chono!=null and !chono.equals("")'>
+	    	AND A.CH_ORD_NO LIKE '%'||#{chono}
+		</if> -->
+		ORDER BY A.ORD_DATE
+	</select>
+	
+	<!-- 배달의민족 엑셀 다운로드 -->
+	<select id="getExcelData_BAEMIN" resultType="EM_SETTLE_BAEMIN_DV_ORD_OMS" parameterType="java.util.HashMap">
+		SELECT 
+					NVL(A.BRANCH_NM, ' ') BRANCH_NM, 														-- 상호명``
+					NVL(A.EXP_PAY_DATE, ' ') EXP_PAY_DATE, 													-- 지급예정일자``
+					NVL(A.PAY_DATE, ' ') PAY_DATE, 															-- 결제일자``
+					NVL(A.PAY_TIME, ' ') PAY_TIME, 															-- 결제시각``
+					NVL(A.SETTLE_STD_DATE, ' ') SETTLE_STD_DATE, 											-- 정산기준일자``
+					NVL(A.ORD_ID, ' ') ORD_ID, 																-- 주문서번호``
+					NVL(A.ORD_STATE, ' ') ORD_STATE, 														-- 주문상태``
+					NVL(A.SALE_ITEM_AMT, 0) SALE_ITEM_AMT, 													-- 매출상품금액``
+					NVL(A.SALE_DV_AMT, 0) SALE_DV_AMT, 														-- 매출배달팁``
+					NVL(A.SALE_ENVELOPE_AMT, 0) SALE_ENVELOPE_AMT, 											-- 매출봉투값``
+					NVL(A.SALE_PARTIAL_REFUND, 0) SALE_PARTIAL_REFUND, 										-- 매출부분환불금액``
+					NVL(A.SALE_SELLER_CPN_AMT, 0) SALE_SELLER_CPN_AMT, 										-- 매출셀러부담쿠폰금액``
+					NVL(A.SALE_SUM, 0) SALE_SUM, 															-- 매출합계``
+					NVL(A.SETTLE_PAY_CHARGE_TARGET_AMT, 0) SETTLE_PAY_CHARGE_TARGET_AMT, 					-- 결제정산수수료부과대상금액``
+					NVL(A.RELAY_FEE_CHARGE_TARGET_AMT, 0) RELAY_FEE_CHARGE_TARGET_AMT, 						-- 중개이용료 부과 대상금액``
+					NVL(A.COMM_SD_SUPPLY_AMT, 0) COMM_SD_SUPPLY_AMT, 										-- 결제정산기준수수료``
+					NVL(A.COMM_SD_PREFERENTIAL_AMT, 0) COMM_SD_PREFERENTIAL_AMT, 							-- 결제정산우대수수료``
+					NVL(A.COMM_PAY_SETTLE_VAT, 0) COMM_PAY_SETTLE_VAT, 										-- 결제정산수수료부가세``
+					NVL(A.COMM_RELAY_FEE_SUPPLY_AMT, 0) COMM_RELAY_FEE_SUPPLY_AMT, 							-- 중개이용료공급가``
+					NVL(A.COMM_RELAY_FEE_VAT, 0) COMM_RELAY_FEE_VAT, 										-- 중걔이용료부가세``
+					NVL(A.COMM_BM_RD_FEE_SUPPLY_AMT, 0) COMM_BM_RD_FEE_SUPPLY_AMT, 							-- 배민라이더스 이용료``
+					NVL(A.COMM_BM_RD_FEE_VAT, 0) COMM_BM_RD_FEE_VAT, 										-- 배민라이더스 이용료 부가세``
+					NVL(A.SETTLE_AMT, 0) SETTLE_AMT, 														-- 정산금액``
+					NVL(B.USER_NM, ' ') USER_NM,  															-- 사용자명
+					NVL(A.REG_DATE, '') REG_DATE 															-- 등록일시
+		FROM EM_SETTLE_BAEMIN_DV_ORD_OMS A
+		LEFT JOIN EM_USER_ACCOUNT_OMS B ON (B.USER_CD = A.USER_CD)
+		<![CDATA[
+			WHERE A.SETTLE_MONTH = #{tmonth}
+		]]>
+		ORDER BY A.ORD_DATE
+	</select>
+	
+	<!-- EMART24 엑셀 다운로드 -->
+	<select id="getExcelData_EMART24" resultType="EM_SETTLE_EMART24_DV_PU_OMS" parameterType="java.util.HashMap">
+		SELECT
+			NVL(A.ORD_DATE, ' ') ORD_DATE,  					-- 주문일자(PK)
+            NVL(A.ORD_ID, ' ') ORD_ID,  						-- 주문ID(PK)
+            NVL(A.CH_ORD_NO, ' ') CH_ORD_NO,    				-- 주문번호(이마트앱주문번호)(PK)
+            NVL(A.CH_CD, ' ') CH_CD,  							-- 채널사코드(PK)
+            NVL(A.STORE_ID, ' ') STORE_ID,  					-- 점포코드(PK)
+            NVL(A.SET_EMART24_DV_SEQ, '') SET_EMART24_DV_SEQ,   -- EMART24앱 시퀀스(PK)
+            NVL(A.DIVISION, ' ') DIVISION,    					-- 구분
+            NVL(A.STORE_NM, ' ') STORE_NM,  					-- 점포명
+            NVL(A.CH_ORD_DT_NO, ' ') CH_ORD_DT_NO,    			-- 상세주문번호
+            NVL(A.ORD_TIME, ' ') ORD_TIME,  					-- 주문일시
+            NVL(A.SALE_ITEM_AMT, 0) SALE_ITEM_AMT,    			-- 상품가합계
+            NVL(A.SALE_DELV_FEE, 0) SALE_DELV_FEE,  			-- 배달료
+            NVL(A.SALE_PAY_AMT, 0) SALE_PAY_AMT,  				-- 결제금액
+            NVL(A.CMS_VAT_INCLUDED, 0) CMS_VAT_INCLUDED,  		-- 수수료(VAT포함)
+            NVL(A.SETTLE_PAY_AMT, 0) SETTLE_PAY_AMT,  			-- 지급액 
+            NVL(A.NOTE, 0) NOTE,  								-- 비고
+            NVL(B.USER_NM, ' ') USER_NM,  						-- 사용자코드
+            NVL(A.REG_DATE, '') REG_DATE  						-- 등록일시
+        FROM EM_SETTLE_EMART24_DV_PU_OMS A
+        INNER JOIN EM_USER_ACCOUNT_OMS B
+        ON (B.USER_CD = A.USER_CD)
+        <![CDATA[
+			WHERE A.SETTLE_MONTH = #{tmonth}
+		]]>
+		<!-- <if test='scd!=null and !scd.equals("")'>
+			AND A.STORE_ID = #{scd}
+		</if>
+		<if test='ono!=null and !ono.equals("")'>
+	    	AND A.DTORD_NO LIKE '%'||#{ono}
+		</if>
+		<if test='chono!=null and !chono.equals("")'>
+	    	AND A.CH_ORD_NO LIKE '%'||#{chono}
+		</if> -->
+		ORDER BY A.ORD_DATE
+	</select>
+	
+	
+	
+	
+	<!-- 부릉 엑셀 다운로드 -->
+	<select id="getExcelData_VROONG" resultType="EM_SETTLE_VROONG_DV_OMS" parameterType="java.util.HashMap">
+		SELECT
+			NVL(A.ORD_DATE, ' ') ORD_DATE, -- 주문일자(PK)
+            NVL(A.ORD_ID, ' ') ORD_ID, -- 자체주문번호(PK)
+            NVL(A.STORE_ID, ' ') STORE_ID, -- 상점코드(PK)
+            NVL(A.RECEIPT_DATE, ' ') RECEIPT_DATE, -- 일자(PK)
+            NVL(A.SET_VROONG_DV_SEQ, '') SET_VROONG_DV_SEQ, -- 부릉 배달 시퀀스(PK)
+            NVL(A.STORE_NM, ' ') STORE_NM, -- 상점명
+            NVL(A.FRANCHISEE_NM, ' ') FRANCHISEE_NM, -- 프렌차이즈명
+            NVL(A.FRANCHISEE_TYPE, ' ') FRANCHISEE_TYPE, -- 프렌차이즈유형
+            NVL(A.VROONG_NO, ' ') VROONG_NO, -- 부릉오더넘버
+            NVL(A.RE_VROONG_NO, ' ') RE_VROONG_NO, -- 재배송부릉오더넘버
+            NVL(A.PRIME_DELIVERY_NO, ' ') PRIME_DELIVERY_NO, -- 프라임딜리버리넘버
+            NVL(A.SELF_DELIVERY_NO, ' ') SELF_DELIVERY_NO, -- 자체배송번호
+            NVL(A.STATE, ' ') STATE, -- 상태
+            NVL(A.START_ADDRESS, ' ') START_ADDRESS, -- 출발지주소
+            NVL(A.FINISH_ADDRESS, ' ') FINISH_ADDRESS, -- 도착지주소
+            NVL(A.PAY_TYPE, ' ') PAY_TYPE, -- 결제수단
+            NVL(A.ITEM_AMT, 0) ITEM_AMT, -- 상품가액
+            NVL(A.CANCEL_CMS, 0) CANCEL_CMS, -- 취소수수료
+            NVL(A.SETTLE_ITEM_AMT, 0) SETTLE_ITEM_AMT, -- 정산상품가액(송급포함)
+            NVL(A.BASIC_DELIVER_FEE, 0) BASIC_DELIVER_FEE, -- 기본배송료
+            NVL(A.ADD_DISTANCE_AMT, 0) ADD_DISTANCE_AMT, -- 거리추가
+            NVL(A.WEATHER_PREMIUM_AMT, 0) WEATHER_PREMIUM_AMT, -- 기상할증
+            NVL(A.AREA_PREMIUM_AMT, 0) AREA_PREMIUM_AMT, -- 지역할증
+            NVL(A.PICKUP_PREMIUM_AMT, 0) PICKUP_PREMIUM_AMT, -- 픽업할증
+            NVL(A.HOLIDAY_PREMIUM_AMT, 0) HOLIDAY_PREMIUM_AMT, -- 명절할증
+            NVL(A.OVERLOAD_PREMIUM_AMT, 0) OVERLOAD_PREMIUM_AMT, -- 과적할증
+            NVL(A.RE_MOVE_DELIVER_FEE, 0) RE_MOVE_DELIVER_FEE, -- 재이동배송비
+            NVL(A.RETURN_DELIVER_FEE, 0) RETURN_DELIVER_FEE, -- 반납배송비
+            NVL(A.SETTLE_CANCEL_CMS, 0) SETTLE_CANCEL_CMS, -- 정산취소수수료
+            NVL(A.CARD_CMS, 0) CARD_CMS, -- 카드수수료
+            NVL(A.STORE_DEPOSIT_AMT, 0) STORE_DEPOSIT_AMT, -- 상점입금액
+            NVL(A.DELIVERY_AGENCY_CMS, 0) DELIVERY_AGENCY_CMS, -- 배달대행수수료
+            NVL(A.CARD_CMS_RATE, ' ') CARD_CMS_RATE, -- 카드수수료율(%)
+            NVL(A.BIGO, ' ') BIGO, -- 비고
+            NVL(A.DISTANCE, 0) DISTANCE, -- 거리
+            NVL(A.RECEIPT_TIME, ' ') RECEIPT_TIME, -- 접수시각
+            NVL(A.ASSIGNED_TIME, ' ') ASSIGNED_TIME, -- 배차시각
+            NVL(A.PICKUP_TIME, ' ') PICKUP_TIME, -- 픽업시각
+            NVL(A.COMPLET_TIME, ' ') COMPLET_TIME, -- 완료시각
+            NVL(A.CANCEL_TIME, ' ') CANCEL_TIME, -- 취소시각
+            NVL(A.FINAL_PAY_TYPE, ' ') FINAL_PAY_TYPE, -- 최종결제수단
+            NVL(A.COMPLET_COUNT, 0) COMPLET_COUNT, -- 완료건수
+            NVL(A.CANCEL_COUNT, 0) CANCEL_COUNT, -- 취소건수
+            NVL(A.PREMIUM_AMT, 0) PREMIUM_AMT, -- 할증금액
+            NVL(A.PREMIUM_MEMO, ' ') PREMIUM_MEMO, -- 할증내용
+            NVL(B.USER_NM, ' ') USER_NM, -- 등록자명
+            NVL(A.REG_DATE, '') REG_DATE -- 등록일시
+		FROM EM_SETTLE_VROONG_DV_OMS A
+        INNER JOIN EM_USER_ACCOUNT_OMS B
+        ON (B.USER_CD = A.USER_CD)
+        <![CDATA[
+			WHERE A.SETTLE_MONTH = #{tmonth}
+		]]>
+		<!-- <if test='scd!=null and !scd.equals("")'>
+			AND A.STORE_ID = #{scd}
+		</if>
+		<if test='ono!=null and !ono.equals("")'>
+	    	AND A.DTORD_NO LIKE '%'||#{ono}
+		</if>
+		<if test='chono!=null and !chono.equals("")'>
+	    	AND A.CH_ORD_NO LIKE '%'||#{chono}
+		</if> -->
+		ORDER BY A.ORD_DATE
+	</select>
+	
+	<!-- 바로고 엑셀 다운로드 -->
+	<select id="getExcelData_BAROGO" resultType="EM_SETTLE_BAROGO_DV_OMS" parameterType="java.util.HashMap">
+		SELECT
+            NVL(A.ORD_DATE, ' ') ORD_DATE,  --주문일자(PK)
+            NVL(A.ORD_ID, ' ') ORD_ID,  --주문번호(PK)
+            NVL(A.RECEIPT_DATE, ' ') RECEIPT_DATE,  --접수일자(PK)
+            NVL(A.RECEIPT_NO, ' ') RECEIPT_NO,  --접수번호(PK)
+            NVL(A.SET_BAROGO_DV_SEQ, '') SET_BAROGO_DV_SEQ, --바로고 배달 시퀀스(PK)
+            NVL(A.RECEIPT_TIME, ' ') RECEIPT_TIME,  --접수시간
+            NVL(A.COMPLET_TIME, ' ') COMPLET_TIME,  --완료시간
+            NVL(A.CANCEL_TIME, ' ') CANCEL_TIME,    --최소시간
+            NVL(A.ORD_ISSUER_NM, ' ') ORD_ISSUER_NM,    --발주가맹점명
+            NVL(A.DISTANCE, ' ') DISTANCE,  --거리(km)
+            NVL(A.BASIC_FARE_AMT, 0) BASIC_FARE_AMT,    --기본운임
+            NVL(A.DISTANCE_FARE_AMT, 0) DISTANCE_FARE_AMT,  --거리운임
+            NVL(A.PICKUP_PREMIUM_AMT, 0) PICKUP_PREMIUM_AMT, --픽업할증
+            NVL(A.LATE_NIGTH_PREMIUM_AMT, 0) LATE_NIGTH_PREMIUM_AMT,    --심야할증
+            NVL(A.RAIN_PREMIUM_AMT, 0) RAIN_PREMIUM_AMT,    --우천할증
+            NVL(A.ADD_PREMIUM_AMT, 0) ADD_PREMIUM_AMT,  --추가할증
+            NVL(A.AREA_PREMIUM_AMT, 0) AREA_PREMIUM_AMT,    --구역할증
+            NVL(A.ITEM_PREMIUM_AMT, 0) ITEM_PREMIUM_AMT,    --상품할증
+            NVL(A.DELIVERY_FARE_AMT, 0) DELIVERY_FARE_AMT,  --배송운임
+            NVL(A.VAT_AMT, 0) VAT_AMT,  --VAT
+            NVL(A.VAT_INCLUDE_AMT, 0) VAT_INCLUDE_AMT,  --VAT포함
+            NVL(A.RECEIPT_CH, ' ') RECEIPT_CH,  --접수채널
+            NVL(A.BIGO, ' ') BIGO,  --비고
+            NVL(B.USER_NM, ' ') USER_NM,    --등록자명
+            NVL(A.REG_DATE, '') REG_DATE   --등록일시
+        FROM EM_SETTLE_BAROGO_DV_OMS A
+        INNER JOIN EM_USER_ACCOUNT_OMS B
+        ON (B.USER_CD = A.USER_CD)
+        <![CDATA[
+            WHERE A.SETTLE_MONTH = #{tmonth}
+        ]]>
+        <!-- <if test='scd!=null and !scd.equals("")'>
+            AND A.STORE_ID = #{scd}
+        </if>
+        <if test='ono!=null and !ono.equals("")'>
+            AND A.ORD_ID LIKE '%'||#{ono}
+        </if>
+        <if test='chono!=null and !chono.equals("")'>
+            AND A.RECEIPT_NO LIKE '%'||#{chono}
+        </if> -->
+        ORDER BY A.ORD_DATE
+	</select>
+	
+	<!-- 생각대로 엑셀 다운로드 -->
+	<select id="getExcelData_LOGIALL" resultType="EM_SETTLE_LOGIALL_DV_OMS" parameterType="java.util.HashMap">
+		SELECT
+             NVL(A.ORD_DATE, ' ') ORD_DATE,  -- 주문일자
+             NVL(A.ORD_ID, ' ') ORD_ID,  -- 주문번호
+             NVL(A.STORE_ID, ' ') STORE_ID,  -- 점포코드
+             NVL(A.DELIVER_DATE, ' ') DELIVER_DATE,  -- 배달일자
+             NVL(A.SET_LOGIALL_DV_SEQ, '') SET_LOGIALL_DV_SEQ,   -- 생각대로
+             NVL(A.STORE_NM, ' ') STORE_NM,  -- 점포명
+             NVL(A.RECEIPT_TIME, ' ') RECEIPT_TIME,  -- 접수시간
+             NVL(A.COMPLET_TIME, ' ') COMPLET_TIME,  -- 완료시간
+             NVL(A.CANCEL_TIME, ' ') CANCEL_TIME,    -- 최소시간
+             NVL(A.DELIVERY_AGENCY_FEE, 0) DELIVERY_AGENCY_FEE,  -- 배달대행료
+             NVL(A.PREMIUM_FEE, 0) PREMIUM_FEE,  -- 할증료
+             NVL(A.PREMIUM_REASON, ' ') PREMIUM_REASON,  -- 할증사유
+             NVL(A.DELIVERY_TOT_AMT, 0) DELIVERY_TOT_AMT,    -- 배달총금액
+             NVL(A.DISTANCE, ' ') DISTANCE,  -- 거리
+             NVL(A.DELIVERY_STATE, ' ') DELIVERY_STATE,  -- 배달상태
+             NVL(B.USER_NM, '') USER_NM, -- 등록자명
+             NVL(A.REG_DATE, '') REG_DATE    -- 등록일시
+        FROM EM_SETTLE_LOGIALL_DV_OMS A
+        INNER JOIN EM_USER_ACCOUNT_OMS B
+        ON (B.USER_CD = A.USER_CD)
+        <![CDATA[
+            WHERE A.SETTLE_MONTH = #{tmonth}
+        ]]>
+        <!-- <if test='scd!=null and !scd.equals("")'>
+            AND A.STORE_ID = #{scd}
+        </if>
+        <if test='ono!=null and !ono.equals("")'>
+            AND A.ORD_ID LIKE '%'||#{ono}
+        </if> -->
+        ORDER BY A.ORD_DATE
+	</select>
+	
+	<!-- 딜버 엑셀 다운로드 -->
+	<select id="getExcelData_DEALVER" resultType="EM_SETTLE_DEALVER_DV_OMS" parameterType="java.util.HashMap">
+		SELECT
+             NVL(A.ORD_ID, ' ') ORD_ID,  -- 주문번호
+             NVL(A.STORE_ID, ' ') STORE_ID,  -- 점포코드
+             NVL(A.DELIVER_DATE, ' ') DELIVER_DATE,  -- 배달일자
+             NVL(A.SET_DEALVER_DV_SEQ, '') SET_DEALVER_DV_SEQ,   -- 딜버
+             NVL(A.STORE_NM, ' ') STORE_NM,  -- 점포명
+             NVL(A.RECEIPT_TIME, ' ') RECEIPT_TIME,  -- 접수시간
+             NVL(A.COMPLET_TIME, ' ') COMPLET_TIME,  -- 완료시간
+             NVL(A.CANCEL_TIME, ' ') CANCEL_TIME,    -- 최소시간
+             NVL(A.DELIVERY_AGENCY_FEE, 0) DELIVERY_AGENCY_FEE,  -- 배달대행료
+             NVL(A.PREMIUM_FEE, 0) PREMIUM_FEE,  -- 할증료
+             NVL(A.PREMIUM_REASON, ' ') PREMIUM_REASON,  -- 할증사유
+             NVL(A.DELIVERY_TOT_AMT, 0) DELIVERY_TOT_AMT,    -- 배달총금액
+             NVL(A.DISTANCE, ' ') DISTANCE,  -- 거리
+             NVL(A.DELIVERY_STATE, ' ') DELIVERY_STATE,  -- 배달상태
+             NVL(B.USER_NM, '') USER_NM, -- 등록자명
+             NVL(A.REG_DATE, '') REG_DATE    -- 등록일시
+        FROM EM_SETTLE_DEALVER_DV_OMS A
+        INNER JOIN EM_USER_ACCOUNT_OMS B
+        ON (B.USER_CD = A.USER_CD)
+        <![CDATA[
+            WHERE A.SETTLE_MONTH = #{tmonth}
+        ]]>
+        <!-- <if test='scd!=null and !scd.equals("")'>
+            AND A.STORE_ID = #{scd}
+        </if>
+        <if test='ono!=null and !ono.equals("")'>
+            AND A.ORD_ID LIKE '%'||#{ono}
+        </if> -->
+        ORDER BY A.ORD_DATE
+	</select>
+	
+	<!-- 스파이더 엑셀 다운로드 -->
+	<select id="getExcelData_SPIDOR" resultType="EM_SETTLE_SPIDOR_DV_OMS" parameterType="java.util.HashMap">
+		SELECT
+             NVL(A.ORD_DATE, ' ') ORD_DATE,  -- 주문일자
+             NVL(A.ORD_ID, ' ') ORD_ID,  -- 주문번호
+             NVL(A.STORE_ID, ' ') STORE_ID,  -- 점포코드
+             NVL(A.DELIVER_DATE, ' ') DELIVER_DATE,  -- 배달일자
+             NVL(A.SET_SPIDOR_DV_SEQ, '') SET_SPIDOR_DV_SEQ,   -- 스파이더
+             NVL(A.STORE_NM, ' ') STORE_NM,  -- 점포명
+             NVL(A.RECEIPT_TIME, ' ') RECEIPT_TIME,  -- 접수시간
+             NVL(A.COMPLET_TIME, ' ') COMPLET_TIME,  -- 완료시간
+             NVL(A.CANCEL_TIME, ' ') CANCEL_TIME,    -- 최소시간
+             NVL(A.DELIVERY_AGENCY_FEE, 0) DELIVERY_AGENCY_FEE,  -- 배달대행료
+             NVL(A.PREMIUM_FEE, 0) PREMIUM_FEE,  -- 할증료
+             NVL(A.PREMIUM_REASON, ' ') PREMIUM_REASON,  -- 할증사유
+             NVL(A.DELIVERY_TOT_AMT, 0) DELIVERY_TOT_AMT,    -- 배달총금액
+             NVL(A.DISTANCE, ' ') DISTANCE,  -- 거리
+             NVL(A.DELIVERY_STATE, ' ') DELIVERY_STATE,  -- 배달상태
+             NVL(B.USER_NM, '') USER_NM, -- 등록자명
+             NVL(A.REG_DATE, '') REG_DATE    -- 등록일시
+        FROM EM_SETTLE_SPIDOR_DV_OMS A
+        INNER JOIN EM_USER_ACCOUNT_OMS B
+        ON (B.USER_CD = A.USER_CD)
+        <![CDATA[
+            WHERE A.SETTLE_MONTH = #{tmonth}
+        ]]>
+        <!-- <if test='scd!=null and !scd.equals("")'>
+            AND A.STORE_ID = #{scd}
+        </if>
+        <if test='ono!=null and !ono.equals("")'>
+            AND A.ORD_ID LIKE '%'||#{ono}
+        </if> -->
+        ORDER BY A.ORD_DATE
+	</select>
+	
+	<!-- 체인로지스 엑셀 다운로드 -->
+	<select id="getExcelData_CHAIN" resultType="EM_SETTLE_CHAINLOGIS_DV_OMS" parameterType="java.util.HashMap">
+		SELECT
+			NVL(A.ORD_DATE, ' ') ORD_DATE, -- 주문일자(PK)
+			NVL(A.ORD_ID, ' ') ORD_ID, -- 주문번호(PK)
+			NVL(A.DELIVER_DATE, ' ') DELIVER_DATE, -- 배달일자(PK)
+			NVL(A.SET_CHAINLOGIS_DV_SEQ, '') SET_CHAINLOGIS_DV_SEQ, -- 체인로지스 배달 시퀀스(PK)
+			NVL(A.RESERVATION_NO, ' ') RESERVATION_NO, -- 예약번호
+			NVL(A.STORE_NM, ' ') STORE_NM, -- 점포명
+			NVL(A.DELIVERY_TOT_AMT, 0) DELIVERY_TOT_AMT, -- 배달총금액(부가세포함)
+			NVL(A.USER_CD, '') USER_CD, -- 사용자코드
+			NVL(B.USER_NM, '') USER_NM, -- 등록자명
+			NVL(A.REG_DATE, '') REG_DATE -- 등록일시
+		FROM EM_SETTLE_CHAINLOGIS_DV_OMS A
+		JOIN EM_USER_ACCOUNT_OMS B ON (B.USER_CD = A.USER_CD)
+		<![CDATA[
+			WHERE A.SETTLE_MONTH = #{tmonth}
+		]]>
+		ORDER BY A.ORD_DATE
+	</select>
+	<!-- 배달정산집계 -전체 -->
+	<select id="getExcelData_TOTAL" resultType="EM_DELIVERY_TOTAL_OMS" parameterType="java.util.HashMap">
+		SELECT
+			*
+		FROM (
+			SELECT
+				NVL(B.CPN_NM, A.CH_CD) AS CPN_NM,
+				A.PLATFORM_AMT,
+				A.PLATFORM_FEE,
+				0 AS PLATFORM_FEE2,
+				0 AS CUSTORMER_CHARGE,
+				0 AS DELIVER_EVENT_FUND,
+				0 AS ADDITIONAL_CHARGE,
+				0 AS DELIVERY_AGENCY_FEE,
+				0 AS DELIVERY_SUPPORT_FUND,
+				A.KIS_FEE AS KIS_FEE
+			FROM (
+				SELECT
+					'합계' AS CH_CD,
+					SUM(ORD_AMT) AS PLATFORM_AMT,
+					SUM(PLATFORM_FEE) AS PLATFORM_FEE,
+					SUM(KIS_FEE) AS KIS_FEE
+				FROM EM_SYNTH_ORD_CH_VIEW
+				WHERE SETTLE_MONTH = #{month} AND MFC_TP_CD='0'
+				<choose>
+					<when test="stype.equals('nomal')">
+						AND MFC_TP_CD = '0'
+					</when>
+					<when test="stype.equals('bsdc')">
+						AND MFC_TP_CD NOT IN ('0')
+					</when>
+				</choose>
+				UNION ALL
+				SELECT
+					CHNEL_CD AS CH_CD,
+					SUM(ORD_AMT) AS PLATFORM_AMT,
+					SUM(PLATFORM_FEE) AS PLATFORM_FEE,
+					SUM(KIS_FEE) AS KIS_FEE
+				FROM EM_SYNTH_ORD_CH_VIEW
+				WHERE SETTLE_MONTH = #{month}
+				<choose>
+					<when test="stype.equals('nomal')">
+						AND MFC_TP_CD = '0'
+					</when>
+					<when test="stype.equals('bsdc')">
+						AND MFC_TP_CD NOT IN ('0')
+					</when>
+				</choose>
+				GROUP BY CHNEL_CD
+			) A
+			LEFT JOIN EM_COMPANY_MASTER_OMS B 
+			ON (A.CH_CD = B.CPN_CD AND B.CPN_TYPE = 'ORDER')
+			ORDER BY DECODE(CH_CD, '합계', 1), CH_CD
+		)
+		UNION ALL
+		SELECT 
+			*
+		FROM (
+			SELECT
+				NVL(B.CPN_NM, A.CH_CD) AS CPN_NM,
+				NULL AS PLATFORM_AMT,
+				NULL AS PLATFORM_FEE,
+				NULL AS PLATFORM_FEE2,
+				NULL AS CUSTORMER_CHARGE,
+				NULL AS DELIVER_EVENT_FUND,
+				NULL AS ADDITIONAL_CHARGE,
+				NVL(A.DELIVERY_AGENCY_FEE, 0) AS DELIVERY_AGENCY_FEE,
+				NULL AS DELIVER_SUPPORT_FUND,
+				NULL AS KIS_RELAY_COMMISSION
+			FROM (
+				SELECT
+					'합계' AS CH_CD,
+					SUM(DELIVER_FEE) AS DELIVERY_AGENCY_FEE
+				FROM EM_SYNTH_DV_CH_VIEW
+				WHERE SETTLE_MONTH = #{month}
+				UNION ALL
+				SELECT
+					CHNEL_CD AS CH_CD,
+					SUM(DELIVER_FEE) AS DELIVERY_AGENCY_FEE
+				FROM EM_SYNTH_DV_CH_VIEW 
+				WHERE SETTLE_MONTH = #{month}
+				GROUP BY CHNEL_CD
+			) A
+			LEFT JOIN EM_COMPANY_MASTER_OMS B 
+			ON (A.CH_CD = B.CPN_CD AND B.CPN_TYPE = 'DELIVERY')
+			ORDER BY DECODE(CH_CD, '합계', 1), CH_CD
+		)
+	</select>
+	<!-- 배달정산집계 -채널 -->
+	<select id="getExcelSynthesis_Order" resultType="EM_SYNTH_ORD_CH_VIEW" parameterType="java.util.HashMap">
+		SELECT
+			SETTLE_MONTH,
+		    CHNEL_CD,
+		    ORD_ID,
+		    ORD_DATE,
+		    ORD_AMT,
+		    DELIVER_FEE,
+		    DELIVER_EVENT_FUND,
+		    PLATFORM_CNT,
+		    LEVY,
+		    PLATFORM_FEE,
+		    PLATFORM_FEE2
+		FROM EM_SYNTH_ORD_CH_VIEW
+		WHERE SETTLE_MONTH = #{month}
+		<choose>
+			<when test="stype.equals('nomal')">
+				AND MFC_TP_CD = '0'
+			</when>
+			<when test="stype.equals('bsdc')">
+				AND MFC_TP_CD NOT IN ('0')
+			</when>
+		</choose> 
+		ORDER BY CHNEL_CD,SETTLE_MONTH, ORD_DATE, ORD_ID
+	</select>
+	<!-- 배달정산집계 -배달 -->
+	<select id="getExcelSynthesis_Delivery" resultType="EM_SYNTH_DV_CH_VIEW" parameterType="java.util.HashMap">
+		SELECT
+			SETTLE_MONTH,
+		    CHNEL_CD,
+		    ORD_DATE,
+		    RECEIPT_TIME,
+		    ORD_ID,
+		    DELIVER_FEE,
+		    ADD_DELIVER_FEE,
+		    DELIVERY_CNT
+		FROM EM_SYNTH_DV_CH_VIEW
+		WHERE SETTLE_MONTH = #{month}
+		ORDER BY CHNEL_CD,SETTLE_MONTH, ORD_DATE, RECEIPT_TIME
+	</select>
+	
+	<!-- 엑셀업로드시 SETTLE_MONTH 별로 시퀀스번호 max값 셀렉트  -->
+	<select id="ExcelUpload_YGYD_STARTINDEX" resultType="int" parameterType="String">
+		SELECT
+		    NVL(MAX(SET_YOGIYO_DV_SEQ),0)
+		FROM EM_SETTLE_YOGIYO_DV_ORD_OMS
+		WHERE SETTLE_MONTH = #{value} 
+	</select>
+	
+	<!--  엑셀업로드시 SETTLE_MONTH별 시퀀스번호 max값 select  -->
+	<select id="ExcelUpload_RELAY_STARTINDEX" resultType="int" parameterType="String">
+		SELECT
+		    NVL(MAX(SET_RELAY_SEQ),0)
+		FROM EM_RELAY_TOTAL_OMS
+		WHERE SETTLE_MONTH = #{value} 
+	</select>
+	
+	<!--중계수수료 엑셀 upload data save   -->
+	<update id ="ExcelUpload_RELAY" parameterType ="java.util.HashMap" >
+	
+		INSERT INTO EM_RELAY_TOTAL_OMS(
+			SETTLE_MONTH ,  
+			SET_RELAY_SEQ, 
+			CPN_CD ,
+			CPN_NM ,
+			ORD_ID,
+			ORD_DATE,
+			DELIVERY_DATE,
+			KIS_FEE,
+			APPLY_GUBUN ,
+			USER_CD
+		)VALUES(
+			#{SETTLE_MONTH},
+			#{SET_RELAY_SEQ},
+			#{CPN_CD},
+			#{CPN_NM},
+			#{ORD_ID},
+			#{ORD_DATE},
+			#{DELIVERY_DATE},
+			#{KIS_FEE},
+			#{APPLY_GUBUN},
+			#{USER_CD} 
+		)
+	</update>
+	
+	
+	<!-- 요기요주문배달정산 -->
+	<update id="ExcelUpload_YGYD" parameterType="java.util.HashMap">
+		INSERT INTO EM_SETTLE_YOGIYO_DV_ORD_OMS (
+			SETTLE_MONTH,
+			ORD_DATE,
+			ORD_ID,
+			CH_ORD_NO,
+			STORE_ID,
+			CH_CD,
+			SET_YOGIYO_DV_SEQ,
+			ORD_TIME,
+			REFUND_TIME,
+			PAY_EXPECTED_DATE,
+			STORE_NM,
+			ORD_NO,
+			ITEM_SUM_AMT,
+			MIN_ORD_ADD_PAY,
+			DELIVER_FEE,
+			ORD_TOT_AMT,
+			ORD_ONLINE_AMT,
+			ORD_OFFLINE_AMT,
+			RESTAURANT_SELF_DIS,
+			PMT_DIS_YOGIYO_LEVY_AMT,
+			PMT_DIS_FRANCHISEE_LEVY_AMT,
+			PMT_DIS_RESTAURANT_LEVY_AMT,
+			ORD_RELAY_FEE_RATE,
+			ORD_RELAY_FEE_TOT_AMT,
+			PAY_RELAY_FEE_RATE,
+			PAY_RELAY_FEE_TOT_AMT,
+			DELIVERY_AGENT_FEE,
+			TOT_SUM_FEE,
+			OD_DELI_FEE_REST_SELF_FUND,
+			YO_TIME_FEE_TOT_YO_TIME_FEE,
+			REFERRAL_ADVERTISEMENT_FEE,
+			SETTLE_AMT,
+			PAY_TYPE_DETAIL,
+			PAY_FORM,
+			PAY_FORM_DETAIL,
+			BIZ_NO,
+			PAY_TYPE,
+			DELIVERY_TYPE,
+			FRANCHISEE_ID,
+			CPN_NM,
+			BIZ_NM,
+			DELIVERY_ADDRESS1,
+			USER_CD,
+			REG_DATE
+		) VALUES (
+			#{SETTLE_MONTH},
+			#{ORD_DATE},
+			#{ORD_ID},
+			#{CH_ORD_NO},
+			#{STORE_ID},
+			#{CH_CD},
+			#{SET_YOGIYO_DV_SEQ},
+			#{ORD_TIME},
+			#{REFUND_TIME},
+			#{PAY_EXPECTED_DATE},
+			#{STORE_NM},
+			#{ORD_NO},
+			#{ITEM_SUM_AMT},
+			#{MIN_ORD_ADD_PAY},
+			#{DELIVER_FEE},
+			#{ORD_TOT_AMT},
+			#{ORD_ONLINE_AMT},
+			#{ORD_OFFLINE_AMT},
+			#{RESTAURANT_SELF_DIS},
+			#{PMT_DIS_YOGIYO_LEVY_AMT},
+			#{PMT_DIS_FRANCHISEE_LEVY_AMT},
+			#{PMT_DIS_RESTAURANT_LEVY_AMT},
+			#{ORD_RELAY_FEE_RATE},
+			#{ORD_RELAY_FEE_TOT_AMT},
+			#{PAY_RELAY_FEE_RATE},
+			#{PAY_RELAY_FEE_TOT_AMT},
+			#{DELIVERY_AGENT_FEE},
+			#{TOT_SUM_FEE},
+			#{OD_DELI_FEE_REST_SELF_FUND},
+			#{YO_TIME_FEE_TOT_YO_TIME_FEE},
+			#{REFERRAL_ADVERTISEMENT_FEE},
+			#{SETTLE_AMT},
+			#{PAY_TYPE_DETAIL},
+			#{PAY_FORM},
+			#{PAY_FORM_DETAIL},
+			#{BIZ_NO},
+			#{PAY_TYPE},
+			#{DELIVERY_TYPE},
+			#{FRANCHISEE_ID},
+			#{CPN_NM},
+			#{BIZ_NM},
+			#{DELIVERY_ADDRESS1},
+			#{USER_CD},
+			SYSDATE
+		)
+	</update>
+	
+	<!-- 엑셀업로드시 SETTLE_MONTH 별로 시퀀스번호 max값 셀렉트  -->
+	<select id="ExcelUpload_YGYP_STARTINDEX" resultType="int" parameterType="String">
+		SELECT
+		    NVL(MAX(SET_YOGIYO_PU_SEQ),0)
+		FROM EM_SETTLE_YOGIYO_PU_ORD_OMS
+		WHERE SETTLE_MONTH = #{value} 
+	</select>
+	
+	<!-- 요기요주문픽업 -->
+	<update id="ExcelUpload_YGYP" parameterType="java.util.HashMap">
+		INSERT INTO EM_SETTLE_YOGIYO_PU_ORD_OMS (
+			SETTLE_MONTH,
+			ORD_DATE,
+			ORD_ID,
+			CH_ORD_NO,
+			STORE_ID,
+			CH_CD,
+			SET_YOGIYO_PU_SEQ,
+			ORD_TIME,
+			REFUND_TIME,
+			PAY_EXPECTED_DATE,
+			BIZ_NO,
+			STORE_NM,
+			ORD_NO,
+			ITEM_SUM_AMT,
+			MIN_ORD_ADD_PAY,
+			DELIVER_FEE,
+			ORD_TOT_AMT,
+			ORD_ONLINE_AMT,
+			ORD_OFFLINE_AMT,
+			RESTAURANT_SELF_DIS,
+			PMT_DIS_YOGIYO_LEVY_AMT,
+			PMT_DIS_FRANCHISEE_LEVY_AMT,
+			PMT_DIS_RESTAURANT_LEVY_AMT,
+			ORD_RELAY_FEE_RATE,
+			ORD_RELAY_FEE_TOT_AMT,
+			PAY_RELAY_FEE_RATE,
+			PAY_RELAY_FEE_TOT_AMT,
+			DELIVERY_AGENT_FEE,
+			TOT_SUM_FEE,
+			OD_DELI_FEE_REST_SELF_FUND,
+			YO_TIME_FEE_TOT_YO_TIME_FEE,
+			REFERRAL_ADVERTISEMENT_FEE,
+			SETTLE_AMT,
+			PAY_TYPE,
+			PAY_TYPE_DETAIL,
+			PAY_FORM,
+			PAY_FORM_DETAIL,
+			DELIVERY_TYPE,
+			FRANCHISEE_ID,
+			CPN_NM,
+			BIZ_NM,
+			DELIVERY_ADDRESS1,
+			USER_CD,
+			REG_DATE
+		) VALUES (
+			#{SETTLE_MONTH},
+			#{ORD_DATE},
+			#{ORD_ID},
+			#{CH_ORD_NO},
+			#{STORE_ID},
+			#{CH_CD},
+			#{SET_YOGIYO_PU_SEQ},
+			#{ORD_TIME},
+			#{REFUND_TIME},
+			#{PAY_EXPECTED_DATE},
+			#{BIZ_NO},
+			#{STORE_NM},
+			#{ORD_NO},
+			#{ITEM_SUM_AMT},
+			#{MIN_ORD_ADD_PAY},
+			#{DELIVER_FEE},
+			#{ORD_TOT_AMT},
+			#{ORD_ONLINE_AMT},
+			#{ORD_OFFLINE_AMT},
+			#{RESTAURANT_SELF_DIS},
+			#{PMT_DIS_YOGIYO_LEVY_AMT},
+			#{PMT_DIS_FRANCHISEE_LEVY_AMT},
+			#{PMT_DIS_RESTAURANT_LEVY_AMT},
+			#{ORD_RELAY_FEE_RATE},
+			#{ORD_RELAY_FEE_TOT_AMT},
+			#{PAY_RELAY_FEE_RATE},
+			#{PAY_RELAY_FEE_TOT_AMT},
+			#{DELIVERY_AGENT_FEE},
+			#{TOT_SUM_FEE},
+			#{OD_DELI_FEE_REST_SELF_FUND},
+			#{YO_TIME_FEE_TOT_YO_TIME_FEE},
+			#{REFERRAL_ADVERTISEMENT_FEE},
+			#{SETTLE_AMT},
+			#{PAY_TYPE},
+			#{PAY_TYPE_DETAIL},
+			#{PAY_FORM},
+			#{PAY_FORM_DETAIL},
+			#{DELIVERY_TYPE},
+			#{FRANCHISEE_ID},
+			#{CPN_NM},
+			#{BIZ_NM},
+			#{DELIVERY_ADDRESS1},
+			#{USER_CD},
+			SYSDATE
+		)	
+	</update>
+	
+	<!-- 엑셀업로드시 SETTLE_MONTH 별로 시퀀스번호 max값 셀렉트  -->
+	<select id="ExcelUpload_KAKAO_STARTINDEX" resultType="int" parameterType="String">
+		SELECT
+		    NVL(MAX(SET_KAKAO_DV_SEQ),0)
+		FROM EM_SETTLE_KAKAO_DV_ORD_OMS
+		WHERE SETTLE_MONTH = #{value} 
+	</select>
+	
+	<update id="ExcelUpload_KAKAO" parameterType="java.util.HashMap">
+		INSERT INTO EM_SETTLE_KAKAO_DV_ORD_OMS (
+			SETTLE_MONTH,
+			ORD_DATE,
+			ORD_ID,
+			CH_ORD_NO,
+			STORE_ID,
+			CH_CD,
+			SET_KAKAO_DV_SEQ,
+			BRAND_NM,
+			STORE_NM,
+			ORD_TIME,
+			ADJUSTMENT_DATE,
+			CMD_ORD_NO,
+			ORD_AMT,
+			DELIVER_FEE,
+			DIS_AMT,
+			ACT_AMT,
+			CANCEL_AMT,
+			PAY_TYPE,
+			PREPAID_CARD,
+			PREPAID_KAKAO_PAY,
+			PREPAID_KAKAO_MONEY,
+			AFTER_PAY,
+			BRAND_LEVY_AMT,
+			KAKAO_LEVY_AMT,
+			FRANCHISEE_LEVY_AMT,
+			ETC_LEVY_AMT,
+			CNT_ORD_RELAY_CMS,
+			KAKAO_ORD_RELAY_CMS,
+			ORD_RELAY_CMS_SUM,
+			CNT_DIS_RELAY_CMS,
+			KAKAO_DIS_RELAY_CMS,
+			DIS_RELAY_CMS_SUM,
+			INICIS_CMS,
+			KAKAO_PAY_CMS,
+			PG_CMS,
+			INICIS_BACK_CMS,
+			E_CUPON_CMS,
+			TOT_CMS_AMT,
+			DEPOSIT_AMT,
+			USER_CD,
+			REG_DATE
+		) VALUES (
+			#{SETTLE_MONTH},
+			#{ORD_DATE},
+			#{ORD_ID},
+			#{CH_ORD_NO},
+			#{STORE_ID},
+			#{CH_CD},
+			#{startIndex} + #{rowIndex},
+			#{BRAND_NM},
+			#{STORE_NM},
+			#{ORD_TIME},
+			#{ADJUSTMENT_DATE},
+			#{CMD_ORD_NO},
+			#{ORD_AMT},
+			#{DELIVER_FEE},
+			#{DIS_AMT},
+			#{ACT_AMT},
+			#{CANCEL_AMT},
+			#{PAY_TYPE},
+			#{PREPAID_CARD},
+			#{PREPAID_KAKAO_PAY},
+			#{PREPAID_KAKAO_MONEY},
+			#{AFTER_PAY},
+			#{BRAND_LEVY_AMT},
+			#{KAKAO_LEVY_AMT},
+			#{FRANCHISEE_LEVY_AMT},
+			#{ETC_LEVY_AMT},
+			#{CNT_ORD_RELAY_CMS},
+			#{KAKAO_ORD_RELAY_CMS},
+			#{ORD_RELAY_CMS_SUM},
+			#{CNT_DIS_RELAY_CMS},
+			#{KAKAO_DIS_RELAY_CMS},
+			#{DIS_RELAY_CMS_SUM},
+			#{INICIS_CMS},
+			#{KAKAO_PAY_CMS},
+			#{PG_CMS},
+			#{INICIS_BACK_CMS},
+			#{E_CUPON_CMS},
+			#{TOT_CMS_AMT},
+			#{DEPOSIT_AMT},
+			#{USER_CD},
+			SYSDATE
+		)
+	</update>
+	
+	
+	<!-- 엑셀업로드시 SETTLE_MONTH 별로 시퀀스번호 max값 셀렉트  -->
+	<select id="ExcelUpload_NAVER_STARTINDEX" resultType="int" parameterType="String">
+		SELECT
+		    NVL(MAX(SET_NAVER_SEQ),0)
+		FROM EM_SETTLE_NAVER_ORD_OMS
+		WHERE SETTLE_MONTH = #{value} 
+	</select>
+	
+	<update id="ExcelUpload_NAVER" parameterType="java.util.HashMap">
+		INSERT INTO EM_SETTLE_NAVER_ORD_OMS (
+			SETTLE_MONTH,
+			ORD_DATE,
+			SETTLE_NO,
+			ITEM_ORD_ID,
+			CH_CD,
+			SET_NAVER_SEQ,
+			GUBUN,
+			ITEM_NM,
+			BUYER_NM,
+			SETTLE_EXPECTED_DATE,
+			SETTLE_COMPLET_DATE,
+			TAX_RETURN_DATE,
+			ACT_AMT,
+			CMS_GUBUN,
+			PAY_TYPE,
+			SALE_LINK_CMS,
+			SALE_LINK_CMS_GUBUN,
+			SETTLE_STATE,
+			USER_CD,
+			REG_DATE
+		) VALUES (
+			#{SETTLE_MONTH},
+			#{ORD_DATE},
+			#{SETTLE_NO},
+			#{ITEM_ORD_ID},
+			#{CH_CD},
+			#{SET_NAVER_SEQ},
+			#{GUBUN},
+			#{ITEM_NM},
+			#{BUYER_NM},
+			#{SETTLE_EXPECTED_DATE},
+			#{SETTLE_COMPLET_DATE},
+			#{TAX_RETURN_DATE},
+			#{ACT_AMT},
+			#{CMS_GUBUN},
+			#{PAY_TYPE},
+			#{SALE_LINK_CMS},
+			#{SALE_LINK_CMS_GUBUN},
+			#{SETTLE_STATE},
+			#{USER_CD},
+			SYSDATE
+		)
+	</update>
+	
+	
+<!-- 엑셀업로드시 SETTLE_MONTH 별로 시퀀스번호 max값 셀렉트  -->
+	<select id="ExcelUpload_KIS_STARTINDEX" resultType="int" parameterType="String">
+		SELECT
+		    NVL(MAX(SET_KISAPP_SEQ),0)
+		FROM EM_SETTLE_KISAPP_ORD_OMS
+		WHERE SETTLE_MONTH = #{value} 
+	</select>
+	<update id="ExcelUpload_KIS" parameterType="java.util.HashMap">
+		INSERT INTO EM_SETTLE_KISAPP_ORD_OMS (
+			SETTLE_MONTH,
+			GUBUN,
+			ORD_DATE,
+			DTORD_NO,
+			CH_ORD_NO,
+			STORE_ID,
+			CH_CD,
+			SET_KISAPP_SEQ,
+			CH_NM,
+			ORD_TIME,
+			PAY_EXPECTED_DATE,
+			BIZ_NO,
+			STORE_NM,
+			MENU_TOT_AMT,
+			DELIVER_FEE,
+			ACT_AMT,
+			CMS_AMT,
+			VAT_AMT,
+			PAY_AMT,
+			BIGO,
+			USER_CD,
+			REG_DATE
+		) VALUES (
+			#{SETTLE_MONTH},
+			#{GUBUN},
+			#{ORD_DATE},
+			#{DTORD_NO},
+			#{CH_ORD_NO},
+			#{STORE_ID},
+			#{CH_CD},
+			#{SET_KISAPP_SEQ},
+			#{CH_NM},
+			#{ORD_TIME},
+			#{PAY_EXPECTED_DATE},
+			#{BIZ_NO},
+			#{STORE_NM},
+			#{MENU_TOT_AMT},
+			#{DELIVER_FEE},
+			#{ACT_AMT},
+			#{CMS_AMT},
+			#{VAT_AMT},
+			#{PAY_AMT},
+			#{BIGO},
+			#{USER_CD},
+			SYSDATE
+		)
+	</update>
+	
+	
+	<!-- 엑셀업로드시 SETTLE_MONTH 별로 시퀀스번호 max값 셀렉트  -->
+	<select id="ExcelUpload_BAEMIN_STARTINDEX" resultType="int" parameterType="String">
+		SELECT
+		    NVL(MAX(SET_BAEMIN_DV_SEQ),0)
+		FROM EM_SETTLE_BAEMIN_DV_ORD_OMS
+		WHERE SETTLE_MONTH = #{value} 
+	</select>
+
+	<!-- 배달의민족 엑셀업로드 -->
+	<update id="ExcelUpload_BAEMIN" parameterType="java.util.HashMap">
+		INSERT INTO EM_SETTLE_BAEMIN_DV_ORD_OMS (
+			SETTLE_MONTH,
+			ORD_DATE,						
+			CH_ORD_NO,							
+			CH_CD,							
+			SET_BAEMIN_DV_SEQ,				
+			BRANCH_NM,	
+			EXP_PAY_DATE,	
+			PAY_DATE,	
+			PAY_TIME,	
+			SETTLE_STD_DATE,	
+			ORD_ID,	
+			ORD_STATE,		
+			SALE_ITEM_AMT,	
+			SALE_DV_AMT,	
+			SALE_ENVELOPE_AMT,	
+			SALE_PARTIAL_REFUND,
+			SALE_SELLER_CPN_AMT,
+			SALE_SUM,
+			SETTLE_PAY_CHARGE_TARGET_AMT,	
+			RELAY_FEE_CHARGE_TARGET_AMT,	
+			COMM_SD_SUPPLY_AMT,	
+			COMM_SD_PREFERENTIAL_AMT,	
+			COMM_PAY_SETTLE_VAT,
+			COMM_RELAY_FEE_SUPPLY_AMT,	
+			COMM_RELAY_FEE_VAT,	
+			COMM_BM_RD_FEE_SUPPLY_AMT,	
+			COMM_BM_RD_FEE_VAT,	
+			COMM_VAT_INCLUDED,	
+			SETTLE_AMT,	
+			USER_CD,	
+			REG_DATE
+		) VALUES (
+			#{SETTLE_MONTH},
+			#{ORD_DATE},						
+			#{CH_ORD_NO},							
+			#{CH_CD},							
+			#{SET_BAEMIN_DV_SEQ},		
+			#{BRANCH_NM},	
+			#{EXP_PAY_DATE},	
+			#{PAY_DATE},	
+			#{PAY_TIME},	
+			#{SETTLE_STD_DATE},	
+			#{ORD_ID},	
+			#{ORD_STATE},	
+			#{SALE_ITEM_AMT},	
+			#{SALE_DV_AMT},	
+			#{SALE_ENVELOPE_AMT},	
+			#{SALE_PARTIAL_REFUND},
+			#{SALE_SELLER_CPN_AMT},
+			#{SALE_SUM},
+			#{SETTLE_PAY_CHARGE_TARGET_AMT},	
+			#{RELAY_FEE_CHARGE_TARGET_AMT},	
+			#{COMM_SD_SUPPLY_AMT},	
+			#{COMM_SD_PREFERENTIAL_AMT},	
+			#{COMM_PAY_SETTLE_VAT},
+			#{COMM_RELAY_FEE_SUPPLY_AMT},	
+			#{COMM_RELAY_FEE_VAT},	
+			#{COMM_BM_RD_FEE_SUPPLY_AMT},	
+			#{COMM_BM_RD_FEE_VAT},	
+			#{COMM_SD_SUPPLY_AMT}+#{COMM_SD_PREFERENTIAL_AMT}+#{COMM_PAY_SETTLE_VAT}+#{COMM_RELAY_FEE_SUPPLY_AMT}+#{COMM_RELAY_FEE_VAT}+#{COMM_BM_RD_FEE_SUPPLY_AMT}+#{COMM_BM_RD_FEE_VAT},	
+			#{SETTLE_AMT},	
+			#{USER_CD},
+			SYSDATE
+		)
+	
+	</update>
+	
+	
+	<!-- 엑셀업로드시 SETTLE_MONTH 별로 시퀀스번호 max값 셀렉트  -->
+	<select id="ExcelUpload_EMART24_STARTINDEX" resultType="int" parameterType="String">
+		SELECT
+		    NVL(MAX(SET_EMART24_DV_SEQ),0)
+		FROM EM_SETTLE_EMART24_DV_PU_OMS
+		WHERE SETTLE_MONTH = #{value} 
+	</select>
+	
+	<!-- 이마트24앱 -->
+	<update id="ExcelUpload_EMART24" parameterType="java.util.HashMap">
+		INSERT INTO EM_SETTLE_EMART24_DV_PU_OMS (
+			SETTLE_MONTH,
+			ORD_DATE,
+			ORD_ID,
+			CH_ORD_NO,
+			CH_CD,
+			STORE_ID,
+			SET_EMART24_DV_SEQ,
+			DIVISION,
+			STORE_NM,
+			CH_ORD_DT_NO,
+			ORD_TIME,
+			SALE_ITEM_AMT,
+			SALE_DELV_FEE,
+			SALE_PAY_AMT,
+			CMS_VAT_INCLUDED,
+			SETTLE_PAY_AMT,
+			NOTE,
+			USER_CD,
+			REG_DATE
+		) VALUES (
+			#{SETTLE_MONTH},
+			#{ORD_DATE},
+			#{ORD_ID},
+			#{CH_ORD_NO},
+			#{CH_CD},
+			#{STORE_ID},
+			#{startIndex} + #{rowIndex},
+			#{DIVISION},
+			#{STORE_NM},
+			#{CH_ORD_DT_NO},
+			#{ORD_TIME},
+			#{SALE_ITEM_AMT},
+			#{SALE_DELV_FEE},
+			#{SALE_PAY_AMT},
+			#{CMS_VAT_INCLUDED},
+			#{SETTLE_PAY_AMT},
+			#{NOTE},
+			#{USER_CD},
+			SYSDATE
+		)
+	</update>
+	
+	<!-- 엑셀업로드시 SETTLE_MONTH 별로 시퀀스번호 max값 셀렉트  -->
+	<select id="ExcelUpload_VROONG_STARTINDEX" resultType="int" parameterType="String">
+		SELECT
+		    NVL(MAX(SET_VROONG_DV_SEQ),0)
+		FROM EM_SETTLE_VROONG_DV_OMS
+		WHERE SETTLE_MONTH = #{value} 
+	</select>
+	
+	<update id="ExcelUpload_VROONG" parameterType="java.util.HashMap">
+		INSERT INTO EM_SETTLE_VROONG_DV_OMS (
+			SETTLE_MONTH,
+			ORD_DATE,
+			ORD_ID,
+			STORE_ID,
+			RECEIPT_DATE,
+			SET_VROONG_DV_SEQ,
+			STORE_NM,
+			FRANCHISEE_NM,
+			FRANCHISEE_TYPE,
+			VROONG_NO,
+			RE_VROONG_NO,
+			PRIME_DELIVERY_NO,
+			SELF_DELIVERY_NO,
+			STATE,
+			START_ADDRESS,
+			FINISH_ADDRESS,
+			PAY_TYPE,
+			ITEM_AMT,
+			CANCEL_CMS,
+			SETTLE_ITEM_AMT,
+			BASIC_DELIVER_FEE,
+			ADD_DISTANCE_AMT,
+			WEATHER_PREMIUM_AMT,
+			AREA_PREMIUM_AMT,
+			PICKUP_PREMIUM_AMT,
+			HOLIDAY_PREMIUM_AMT,
+			OVERLOAD_PREMIUM_AMT,
+			RE_MOVE_DELIVER_FEE,
+			RETURN_DELIVER_FEE,
+			SETTLE_CANCEL_CMS,
+			CARD_CMS,
+			STORE_DEPOSIT_AMT,
+			DELIVERY_AGENCY_CMS,
+			CARD_CMS_RATE,
+			BIGO,
+			DISTANCE,
+			RECEIPT_TIME,
+			ASSIGNED_TIME,
+			PICKUP_TIME,
+			COMPLET_TIME,
+			CANCEL_TIME,
+			FINAL_PAY_TYPE,
+			COMPLET_COUNT,
+			CANCEL_COUNT,
+			PREMIUM_AMT,
+			PREMIUM_MEMO,
+			USER_CD,
+			REG_DATE
+		) VALUES (
+			#{SETTLE_MONTH},
+			#{ORD_DATE},
+			#{ORD_ID},
+			#{STORE_ID},
+			#{RECEIPT_DATE},
+			#{startIndex} + #{rowIndex},
+			#{STORE_NM},
+			#{FRANCHISEE_NM},
+			#{FRANCHISEE_TYPE},
+			#{VROONG_NO},
+			#{RE_VROONG_NO},
+			#{PRIME_DELIVERY_NO},
+			#{SELF_DELIVERY_NO},
+			#{STATE},
+			#{START_ADDRESS},
+			#{FINISH_ADDRESS},
+			#{PAY_TYPE},
+			#{ITEM_AMT},
+			#{CANCEL_CMS},
+			#{SETTLE_ITEM_AMT},
+			#{BASIC_DELIVER_FEE},
+			#{ADD_DISTANCE_AMT},
+			#{WEATHER_PREMIUM_AMT},
+			#{AREA_PREMIUM_AMT},
+			#{PICKUP_PREMIUM_AMT},
+			#{HOLIDAY_PREMIUM_AMT},
+			#{OVERLOAD_PREMIUM_AMT},
+			#{RE_MOVE_DELIVER_FEE},
+			#{RETURN_DELIVER_FEE},
+			#{SETTLE_CANCEL_CMS},
+			#{CARD_CMS},
+			#{STORE_DEPOSIT_AMT},
+			#{DELIVERY_AGENCY_CMS},
+			#{CARD_CMS_RATE},
+			#{BIGO},
+			#{DISTANCE},
+			#{RECEIPT_TIME},
+			#{ASSIGNED_TIME},
+			#{PICKUP_TIME},
+			#{COMPLET_TIME},
+			#{CANCEL_TIME},
+			#{FINAL_PAY_TYPE},
+			#{COMPLET_COUNT},
+			#{CANCEL_COUNT},
+			#{PREMIUM_AMT},
+			#{PREMIUM_MEMO},
+			#{USER_CD},
+			SYSDATE
+		)
+	</update>
+	
+	
+	<!-- 엑셀업로드시 SETTLE_MONTH 별로 시퀀스번호 max값 셀렉트  -->
+	<select id="ExcelUpload_BAROGO_STARTINDEX" resultType="int" parameterType="String">
+		SELECT
+		    NVL(MAX(SET_BAROGO_DV_SEQ),0)
+		FROM EM_SETTLE_BAROGO_DV_OMS
+		WHERE SETTLE_MONTH = #{value} 
+	</select>
+	<update id="ExcelUpload_BAROGO" parameterType="java.util.HashMap">
+		INSERT INTO EM_SETTLE_BAROGO_DV_OMS (
+			 SETTLE_MONTH,
+             ORD_DATE,
+             ORD_ID,
+             RECEIPT_DATE,
+             RECEIPT_NO,
+             SET_BAROGO_DV_SEQ,
+             RECEIPT_TIME,
+             COMPLET_TIME,
+             CANCEL_TIME,
+             ORD_ISSUER_NM,
+             DISTANCE,
+             BASIC_FARE_AMT,
+             DISTANCE_FARE_AMT,
+             PICKUP_PREMIUM_AMT,
+             LATE_NIGTH_PREMIUM_AMT,
+             RAIN_PREMIUM_AMT,
+             ADD_PREMIUM_AMT,
+             AREA_PREMIUM_AMT,
+             ITEM_PREMIUM_AMT,
+             DELIVERY_FARE_AMT,
+             VAT_AMT,
+             VAT_INCLUDE_AMT,
+             RECEIPT_CH,
+             BIGO,
+             USER_CD,
+             REG_DATE
+		) VALUES (
+			 #{SETTLE_MONTH},
+             #{ORD_DATE},
+             #{ORD_ID},
+             #{RECEIPT_DATE},
+             #{RECEIPT_NO},
+             #{startIndex} + #{rowIndex},
+             #{RECEIPT_TIME},
+             #{COMPLET_TIME},
+             #{CANCEL_TIME},
+             #{ORD_ISSUER_NM},
+             #{DISTANCE},
+             #{BASIC_FARE_AMT},
+             #{DISTANCE_FARE_AMT},
+             #{PICKUP_PREMIUM_AMT},
+             #{LATE_NIGTH_PREMIUM_AMT},
+             #{RAIN_PREMIUM_AMT},
+             #{ADD_PREMIUM_AMT},
+             #{AREA_PREMIUM_AMT},
+             #{ITEM_PREMIUM_AMT},
+             #{DELIVERY_FARE_AMT},
+             #{VAT_AMT},
+             #{VAT_INCLUDE_AMT},
+             #{RECEIPT_CH},
+             #{BIGO},
+             #{USER_CD},
+             SYSDATE
+		)
+	</update>
+	
+	
+	<!-- 엑셀업로드시 SETTLE_MONTH 별로 시퀀스번호 max값 셀렉트  -->
+	<select id="ExcelUpload_LOGIALL_STARTINDEX" resultType="int" parameterType="String">
+		SELECT
+		    NVL(MAX(SET_LOGIALL_DV_SEQ),0)
+		FROM EM_SETTLE_LOGIALL_DV_OMS
+		WHERE SETTLE_MONTH = #{value} 
+	</select>
+    <update id="ExcelUpload_LOGIALL" parameterType="java.util.HashMap">
+		INSERT INTO EM_SETTLE_LOGIALL_DV_OMS (
+			SETTLE_MONTH,
+			ORD_DATE,
+            ORD_ID,
+            STORE_ID,
+            DELIVER_DATE,
+            SET_LOGIALL_DV_SEQ,
+            STORE_NM,
+            RECEIPT_TIME,
+            COMPLET_TIME,
+            CANCEL_TIME,
+            DELIVERY_AGENCY_FEE,
+            PREMIUM_FEE,
+            PREMIUM_REASON,
+            DELIVERY_TOT_AMT,
+            DISTANCE,
+            DELIVERY_STATE,
+            USER_CD,
+            REG_DATE
+		) VALUES (
+			#{SETTLE_MONTH},
+			#{ORD_DATE},
+			#{ORD_ID},
+			#{STORE_ID},
+			#{DELIVER_DATE},
+			#{startIndex} + #{rowIndex},
+			#{STORE_NM},
+			#{RECEIPT_TIME},
+			#{COMPLET_TIME},
+			#{CANCEL_TIME},
+			#{DELIVERY_AGENCY_FEE},
+			#{PREMIUM_FEE},
+			#{PREMIUM_REASON},
+			#{DELIVERY_TOT_AMT},
+			#{DISTANCE},
+			#{DELIVERY_STATE},
+			#{USER_CD},
+			SYSDATE
+		)
+	</update>
+	
+	
+	<!-- 엑셀업로드시 SETTLE_MONTH 별로 시퀀스번호 max값 셀렉트  -->
+	<select id="ExcelUpload_DEALVER_STARTINDEX" resultType="int" parameterType="String">
+		SELECT
+		    NVL(MAX(SET_DEALVER_DV_SEQ),0)
+		FROM EM_SETTLE_DEALVER_DV_OMS
+		WHERE SETTLE_MONTH = #{value} 
+	</select>
+    <update id="ExcelUpload_DEALVER" parameterType="java.util.HashMap">
+		INSERT INTO EM_SETTLE_DEALVER_DV_OMS (
+			SETTLE_MONTH,
+			ORD_DATE,
+            ORD_ID,
+            STORE_ID,
+            DELIVER_DATE,
+            SET_DEALVER_DV_SEQ,
+            STORE_NM,
+            RECEIPT_TIME,
+            COMPLET_TIME,
+            CANCEL_TIME,
+            DELIVERY_AGENCY_FEE,
+            PREMIUM_FEE,
+            PREMIUM_REASON,
+            DELIVERY_TOT_AMT,
+            DISTANCE,
+            DELIVERY_STATE,
+            USER_CD,
+            REG_DATE
+		) VALUES (
+			#{SETTLE_MONTH},
+			#{ORD_DATE},
+			#{ORD_ID},
+			#{STORE_ID},
+			#{DELIVER_DATE},
+			#{startIndex} + #{rowIndex},
+			#{STORE_NM},
+			#{RECEIPT_TIME},
+			#{COMPLET_TIME},
+			#{CANCEL_TIME},
+			#{DELIVERY_AGENCY_FEE},
+			#{PREMIUM_FEE},
+			#{PREMIUM_REASON},
+			#{DELIVERY_TOT_AMT},
+			#{DISTANCE},
+			#{DELIVERY_STATE},
+			#{USER_CD},
+			SYSDATE
+		)
+	</update>
+	
+	
+	<!-- 엑셀업로드시 SETTLE_MONTH 별로 시퀀스번호 max값 셀렉트  -->
+	<select id="ExcelUpload_SPIDOR_STARTINDEX" resultType="int" parameterType="String">
+		SELECT
+		    NVL(MAX(SET_SPIDOR_DV_SEQ),0)
+		FROM EM_SETTLE_SPIDOR_DV_OMS
+		WHERE SETTLE_MONTH = #{value} 
+	</select>
+    <update id="ExcelUpload_SPIDOR" parameterType="java.util.HashMap">
+		INSERT INTO EM_SETTLE_SPIDOR_DV_OMS (
+			SETTLE_MONTH,
+			ORD_DATE,
+            ORD_ID,
+            STORE_ID,
+            DELIVER_DATE,
+            SET_SPIDOR_DV_SEQ,
+            STORE_NM,
+            RECEIPT_TIME,
+            COMPLET_TIME,
+            CANCEL_TIME,
+            DELIVERY_AGENCY_FEE,
+            PREMIUM_FEE,
+            PREMIUM_REASON,
+            DELIVERY_TOT_AMT,
+            DISTANCE,
+            DELIVERY_STATE,
+            USER_CD,
+            REG_DATE
+		) VALUES (
+			#{SETTLE_MONTH},
+			#{ORD_DATE},
+			#{ORD_ID},
+			#{STORE_ID},
+			#{DELIVER_DATE},
+			#{startIndex} + #{rowIndex},
+			#{STORE_NM},
+			#{RECEIPT_TIME},
+			#{COMPLET_TIME},
+			#{CANCEL_TIME},
+			#{DELIVERY_AGENCY_FEE},
+			#{PREMIUM_FEE},
+			#{PREMIUM_REASON},
+			#{DELIVERY_TOT_AMT},
+			#{DISTANCE},
+			#{DELIVERY_STATE},
+			#{USER_CD},
+			SYSDATE
+		)
+	</update>
+	
+	
+	<!-- 엑셀업로드시 SETTLE_MONTH 별로 시퀀스번호 max값 셀렉트  -->
+	<select id="ExcelUpload_CHAIN_STARTINDEX" resultType="int" parameterType="String">
+		SELECT
+		    NVL(MAX(SET_CHAINLOGIS_DV_SEQ),0)
+		FROM EM_SETTLE_CHAINLOGIS_DV_OMS
+		WHERE SETTLE_MONTH = #{value} 
+	</select>
+    <update id="ExcelUpload_CHAIN" parameterType="java.util.HashMap">
+		INSERT INTO EM_SETTLE_CHAINLOGIS_DV_OMS (
+			SETTLE_MONTH,
+			ORD_DATE,        		
+			ORD_ID,          		
+			DELIVER_DATE,  			
+			SET_CHAINLOGIS_DV_SEQ,  
+			RESERVATION_NO, 		
+			STORE_NM, 				
+			DELIVERY_TOT_AMT,		
+			USER_CD,				
+			REG_DATE 				
+		) VALUES (
+			#{SETTLE_MONTH},
+			#{ORD_DATE},
+			#{ORD_ID},
+			#{DELIVER_DATE},
+			#{startIndex} + #{rowIndex},
+			#{RESERVATION_NO},
+			#{STORE_NM},
+			#{DELIVERY_TOT_AMT},
+			#{USER_CD},
+			SYSDATE 
+		)
+	</update>
+</mapper>

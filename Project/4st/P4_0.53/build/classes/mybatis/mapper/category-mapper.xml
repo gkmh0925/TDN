@@ -1,0 +1,202 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="category">
+
+	<select id="categorySearch" resultType="EM_CATEGORY_MASTER_OMS" parameterType="java.util.HashMap">
+		SELECT ROW_NUMBER() OVER(ORDER BY A.SEQ) RN
+		     , A.CTGR_CD
+		     , A.CTGR_NM
+		     , B.DEFINITION_NM CTGR_TYPE_NM
+		     , A.CH_CD
+		     , C.CPN_NM
+		     , A.SEQ
+		     , A.CTGR_INFO
+		     , A.REG_DATE
+		     , A.MDF_DATE
+		     , A.CTGR_TYPE
+	     FROM EM_CATEGORY_MASTER_OMS A
+   INNER JOIN EM_REFERENCE_CODE_OMS B ON A.CTGR_TYPE = B.DEFINITION_CD
+   INNER JOIN EM_COMPANY_MASTER_OMS C ON A.CH_CD = C.CPN_CD AND C.CPN_TYPE  = 'ORDER'
+	<if test='scd != null and !scd.equals("")'>
+		WHERE CH_CD = #{scd}
+  </if>
+   ORDER BY SEQ
+	</select>  
+	
+	<select id="GetPolicyCode" resultType="EM_REFERENCE_CODE_OMS">
+		SELECT * FROM EM_REFERENCE_CODE_OMS WHERE GROUP_CD = 'AJ'
+	</select>
+	
+	<select id="GetCategory" resultType="EM_CATEGORY_MASTER_OMS">
+	    SELECT CTGR_NM, CTGR_CD
+	    FROM EM_CATEGORY_MASTER_OMS
+	    WHERE CTGR_TYPE = 'ORDER'
+	</select>
+		
+	<select id="GetCtgrCd" resultType="EM_CATEGORY_MASTER_OMS" parameterType="String">
+    SELECT A.*, EM_COMPANY_MASTER_OMS.CPN_NM
+		FROM EM_CATEGORY_MASTER_OMS A
+		JOIN EM_COMPANY_MASTER_OMS ON A.CH_CD = EM_COMPANY_MASTER_OMS.CPN_CD
+		WHERE A.CTGR_CD = #{ctgrcd} AND A.CTGR_TYPE = 'item'
+	</select>
+	
+	<select id="GetCtgrInfo" resultType="EM_CATEGORY_MASTER_OMS" parameterType="java.util.HashMap">
+    SELECT A.*, EM_COMPANY_MASTER_OMS.CPN_NM
+		FROM EM_CATEGORY_MASTER_OMS A
+		JOIN EM_COMPANY_MASTER_OMS ON A.CH_CD = EM_COMPANY_MASTER_OMS.CPN_CD AND CPN_TYPE = 'ORDER'
+		WHERE A.CTGR_TYPE = #{ctgr_type} AND A.CH_CD = #{ch_cd} AND A.CTGR_CD = #{ctgrcd}  
+	</select>
+	
+	<select id="GetAllCpnCd" resultType="EM_COMPANY_MASTER_OMS" >
+    SELECT *
+		FROM EM_COMPANY_MASTER_OMS
+		WHERE EM_COMPANY_MASTER_OMS.CPN_TYPE = 'ORDER'
+		  AND CPN_CD IN ('01','07') 
+     ORDER BY CPN_CD
+	</select>
+		
+	<!-- 카테고리 입력 -->
+	<insert id="categoryInsert" parameterType="EM_CATEGORY_MASTER_OMS">
+		INSERT INTO EM_CATEGORY_MASTER_OMS 
+		(
+		    CTGR_TYPE,
+		    CH_CD,
+		    CTGR_CD,
+		    CTGR_NM,
+		    CTGR_LEVEL,
+		    SEQ,
+		    FIRST_CTGR,
+		    REG_USER_CD,
+		    REG_DATE,
+		    CTGR_INFO
+		)
+		VALUES
+		(
+		    #{CTGR_TYPE},
+		    #{CH_CD},
+			#{CTGR_CD},
+		    #{CTGR_NM},
+		    1,
+		    #{SEQ},
+		    1,
+		    #{REG_USER_CD},
+		    SYSDATE,
+		    #{CTGR_INFO}
+		)
+	</insert>
+
+	<!-- 상품 검색 정보 총 게시글 개수 확인 -->
+	<select id="getSearchCategoryTotal" resultType="int" parameterType="java.util.HashMap">
+		SELECT 
+			COUNT(*)
+		FROM EM_CATEGORY_MASTER_OMS where CH_CD = #{scd}
+	</select>
+	
+	
+	<select id="getSearchCategoryLv2Total" resultType="int" parameterType="java.util.HashMap">
+		SELECT 
+			COUNT(*)
+		FROM EM_CATEGORY_MASTER_OMS where CH_CD = #{scd}
+	</select>
+	
+	<select id="getCategoryCode" resultType="String" parameterType="String">
+		SELECT CTGR_CD FROM EM_CATEGORY_MASTER_OMS WHERE CTGR_NM = #{ctgrNM}
+	</select>
+	
+	<select id="getStoreOrder" resultType="EM_COMPANY_MASTER_OMS" parameterType="String">
+		SELECT * FROM EM_COMPANY_MASTER_OMS WHERE CPN_TYPE = 'ORDER'
+	</select>
+	
+	
+		<select id="categoryLv2Search" resultType="EM_CATEGORY_MASTER_OMS" parameterType="java.util.HashMap">
+		SELECT * FROM EM_CATEGORY_MASTER_OMS where CH_CD = #{scd} AND CTGR_TYPE in ('item', 'home') AND CTGR_LEVEL = '2' ORDER BY CTGR_CD 
+	</select>  
+	
+	<!-- 카테고리 입력 -->
+		<insert id="categoryLv2Insert" parameterType="EM_CATEGORY_MASTER_OMS">
+			INSERT INTO
+			    EM_CATEGORY_MASTER_OMS 
+			    (
+			        CTGR_TYPE,
+			        CH_CD,
+			        CTGR_CD,
+			        CTGR_NM,
+			        CTGR_LEVEL,
+			        SEQ,
+			        FIRST_CTGR,
+			        SECOND_CTGR,
+			        THIRD_CTGR,
+			        REG_USER_CD,
+			        REG_DATE
+			    )
+			VALUES
+			    (
+			        #{CTGR_TYPE},
+			        #{CH_CD},
+			        (SELECT MAX(CTGR_CD) + 1 FROM EM_CATEGORY_MASTER_OMS),
+			        #{CTGR_NM},
+			        2,
+			        #{SEQ},
+			        1,
+			        0,
+			        0,
+			        #{REG_USER_CD},
+			        SYSDATE
+			    )
+
+	</insert>
+	
+	<select id="isDuplicateCategory" resultType="int" parameterType="EM_CATEGORY_MASTER_OMS">
+		SELECT 
+			COUNT(*)
+		FROM EM_CATEGORY_MASTER_OMS WHERE CTGR_TYPE = #{CTGR_TYPE} AND CH_CD = #{CH_CD} AND CTGR_CD = #{CTGR_CD}
+	</select>
+	
+	
+	
+<!-- 	!@@0701 yh -->
+	<select id="getOrderCompanyStoreCategoryList" resultType="EM_CATEGORY_MASTER_OMS" parameterType="java.util.HashMap">	
+		SELECT ROW_NUMBER() OVER(ORDER BY A.SEQ) RN
+		     , A.CTGR_CD
+		     , A.CTGR_NM
+		     , B.DEFINITION_NM CTGR_TYPE_NM
+		     , A.CH_CD
+		     , C.CPN_NM
+		     , A.SEQ
+		     , A.CTGR_INFO
+		     , A.REG_DATE
+		     , A.MDF_DATE
+		     , A.CTGR_TYPE
+     	FROM EM_CATEGORY_MASTER_OMS A
+		   INNER JOIN EM_REFERENCE_CODE_OMS B ON A.CTGR_TYPE = B.DEFINITION_CD AND A.CTGR_TYPE IN ('BMIN_HOME', 'YGY_CTGR')
+		   INNER JOIN EM_COMPANY_MASTER_OMS C ON A.CH_CD = C.CPN_CD AND C.CPN_TYPE  = 'ORDER'
+		<if test='scd != null and !scd.equals("")'>
+			WHERE CH_CD = #{scd}
+  		</if>
+   		ORDER BY SEQ
+	</select>
+	<select id="getOrderCompanyProductCategoryList" resultType="EM_CATEGORY_MASTER_OMS" parameterType="java.util.HashMap">	
+	SELECT ROW_NUMBER() OVER(ORDER BY A.SEQ) RN
+	     , A.CTGR_CD
+	     , A.CTGR_NM
+	     , B.DEFINITION_NM CTGR_TYPE_NM
+	     , A.CH_CD
+	     , C.CPN_NM
+	     , A.SEQ
+	     , A.CTGR_INFO
+	     , A.REG_DATE
+	     , A.MDF_DATE
+	     , A.CTGR_TYPE
+    	FROM EM_CATEGORY_MASTER_OMS A
+	   	INNER JOIN EM_REFERENCE_CODE_OMS B ON A.CTGR_TYPE = B.DEFINITION_CD
+	   	INNER JOIN EM_COMPANY_MASTER_OMS C ON A.CH_CD = C.CPN_CD AND C.CPN_TYPE  = 'ORDER'
+	   	<if test='scd != null and !scd.equals("")'>
+      		AND CH_CD = #{scd}
+    	</if>
+   		<if test='prdCtgrType != null and !prdCtgrType.equals("")'>
+      		AND A.CTGR_TYPE = #{prdCtgrType}
+    	</if>
+  		ORDER BY SEQ
+	</select>
+		
+</mapper>

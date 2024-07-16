@@ -1,0 +1,78 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE configuration PUBLIC "-//mybatis.org//DTD Config 3.0//EN" "http://mybatis.org/dtd/mybatis-3-config.dtd" >
+<configuration>
+	<!-- 마이바티스의 동작을 제어하는 설정 태그 = <Settings> -->
+	<!-- properties 밑에, typeAliases 위에 위치해야한다 -->
+	<settings>
+		<setting name="jdbcTypeForNull" value="NULL"/>
+	</settings>
+	<typeAliases>
+		<typeAlias type="oms.kisvan.emart.model.dto.EM_USER_ACCOUNT_OMS" alias="EM_USER_ACCOUNT_OMS" />
+		<typeAlias type="oms.kisvan.emart.model.dto.TB_ORDER_STATE" alias="TB_ORDER_STATE" />
+		<typeAlias type="oms.kisvan.emart.model.dto.EM_MENU_MASTER_OMS" alias="EM_MENU_MASTER_OMS" />
+		<typeAlias type="oms.kisvan.emart.model.dto.EM_COMPANY_MASTER_OMS" alias="EM_COMPANY_MASTER_OMS" />
+		<typeAlias type="oms.kisvan.emart.model.dto.EM_REFERENCE_CODE_OMS" alias="EM_REFERENCE_CODE_OMS" />
+		<typeAlias type="oms.kisvan.emart.model.dto.EM_CATEGORY_MASTER_OMS" alias="EM_CATEGORY_MASTER_OMS" />
+		<typeAlias type="oms.kisvan.emart.model.dto.EM_USER_AUTH_OMS" alias="EM_USER_AUTH_OMS" />
+		<typeAlias type="oms.kisvan.emart.model.dto.EM_SETTLE_POS_ORD_OMS" alias="EM_SETTLE_POS_ORD_OMS" />
+		<typeAlias type="oms.kisvan.emart.model.dto.EM_SYNTH_ORD_CH_VIEW" alias="EM_SYNTH_ORD_CH_VIEW" />
+		<typeAlias type="oms.kisvan.emart.model.dto.EM_SYNTH_DV_CH_VIEW" alias="EM_SYNTH_DV_CH_VIEW" />
+		<typeAlias type="oms.kisvan.emart.model.dto.EM_CMS_OPERATION_OMS" alias="EM_CMS_OPERATION_OMS" />
+		
+		<!-- ##########################################0101########################################## -->
+		<typeAlias type="oms.kisvan.emart.model.dto.EM_STORE_OPERATION_OMS" alias="EM_STORE_OPERATION_OMS" />
+		<typeAlias type="oms.kisvan.emart.model.dto.EM_CHANNEL_STORE_OPERATION_OMS" alias="EM_CHANNEL_STORE_OPERATION_OMS" />
+		
+		<!-- ##########################################0201########################################## -->
+		<typeAlias type="oms.kisvan.emart.model.dto.EM_MENU_MASTER_OMS" alias="EM_MENU_MASTER_OMS" />
+		<typeAlias type="oms.kisvan.emart.model.dto.EM_MENU_OPTION_OMS" alias="EM_MENU_OPTION_OMS" />
+		<typeAlias type="oms.kisvan.emart.model.dto.EM_OPTION_ITEM_OMS" alias="EM_OPTION_ITEM_OMS" />
+		<typeAlias type="oms.kisvan.emart.model.dto.TB_STOCK_CHECK" alias="TB_STOCK_CHECK" />
+		
+		<!-- ##########################################0301########################################## -->
+		<typeAlias type="oms.kisvan.emart.model.dto.EM_ORDER_HISTORY_OMS" alias="EM_ORDER_HISTORY_OMS" />
+		<typeAlias type="oms.kisvan.emart.model.dto.EM_ORDER_MENU_OMS" alias="EM_ORDER_MENU_OMS" />
+
+		<!-- ##########################################0404########################################## -->
+		<typeAlias type="oms.kisvan.emart.model.dto.EM_SETTLE_YOGIYO_DV_ORD_OMS" alias="EM_SETTLE_YOGIYO_DV_ORD_OMS" />
+		<typeAlias type="oms.kisvan.emart.model.dto.EM_SETTLE_YOGIYO_PU_ORD_OMS" alias="EM_SETTLE_YOGIYO_PU_ORD_OMS" />
+		<typeAlias type="oms.kisvan.emart.model.dto.EM_SETTLE_NAVER_ORD_OMS" alias="EM_SETTLE_NAVER_ORD_OMS" />
+		<typeAlias type="oms.kisvan.emart.model.dto.EM_SETTLE_KAKAO_DV_ORD_OMS" alias="EM_SETTLE_KAKAO_DV_ORD_OMS" />
+		<typeAlias type="oms.kisvan.emart.model.dto.EM_SETTLE_KISAPP_ORD_OMS" alias="EM_SETTLE_KISAPP_ORD_OMS" />
+		<typeAlias type="oms.kisvan.emart.model.dto.EM_SETTLE_BAEMIN_DV_ORD_OMS" alias="EM_SETTLE_BAEMIN_DV_ORD_OMS" />
+		<typeAlias type="oms.kisvan.emart.model.dto.EM_SETTLE_EMART24_DV_PU_OMS" alias="EM_SETTLE_EMART24_DV_PU_OMS" />
+	
+		<!-- ##########################################0405########################################## -->
+		<typeAlias type="oms.kisvan.emart.model.dto.EM_SETTLE_BAROGO_DV_OMS" alias="EM_SETTLE_BAROGO_DV_OMS" />
+		<typeAlias type="oms.kisvan.emart.model.dto.EM_SETTLE_VROONG_DV_OMS" alias="EM_SETTLE_VROONG_DV_OMS" />
+		<typeAlias type="oms.kisvan.emart.model.dto.EM_SETTLE_LOGIALL_DV_OMS" alias="EM_SETTLE_LOGIALL_DV_OMS" />
+		<typeAlias type="oms.kisvan.emart.model.dto.EM_SETTLE_DEALVER_DV_OMS" alias="EM_SETTLE_DEALVER_DV_OMS" />
+		<typeAlias type="oms.kisvan.emart.model.dto.EM_SETTLE_SPIDOR_DV_OMS" alias="EM_SETTLE_SPIDOR_DV_OMS" />
+		<typeAlias type="oms.kisvan.emart.model.dto.EM_SETTLE_CHAINLOGIS_DV_OMS" alias="EM_SETTLE_CHAINLOGIS_DV_OMS" />
+		
+		<!-- ##########################################0408########################################## -->
+		<typeAlias type="oms.kisvan.emart.model.dto.EM_DELIVERY_TOTAL_OMS" alias="EM_DELIVERY_TOTAL_OMS" />
+		
+		<!-- ##########################################0409########################################## -->
+		<typeAlias type="oms.kisvan.emart.model.dto.COMPARE_RELAY" alias="COMPARE_RELAY" />
+		<typeAlias type="oms.kisvan.emart.model.dto.COMPARE_CAL_RELAY" alias="COMPARE_CAL_RELAY" />
+		
+				<!-- ##########################################0412########################################## -->
+		<typeAlias type="oms.kisvan.emart.model.dto.StoreOrdNoDetailsInfoDTO" alias="storeOrdNoDetailsInfoDTO" />
+
+		<!-- ##########################################0413########################################## -->
+		<typeAlias type="oms.kisvan.emart.model.dto.StoreMonthDetailsInfoDTO" alias="storeMonthDetailsInfoDTO" />
+
+		<!-- ##########################################PAGING##########################################	-->
+		<typeAlias type="oms.kisvan.emart.model.dto.Criteria" alias="Criteria" />
+		
+		<!-- ##########################################0408########################################## -->
+		<typeAlias type="oms.kisvan.emart.model.dto.EM_RELAY_TOTAL_OMS" alias="EM_RELAY_TOTAL_OMS" />
+		<!-- ##########################################0408########################################## -->
+		<typeAlias type="oms.kisvan.emart.model.dto.TB_DELIVERY_STATE" alias="TB_DELIVERY_STATE" />
+		<typeAlias type="oms.kisvan.emart.model.dto.TB_DELIVERY_STATE" alias="EM_PRODUCT_MASTER_OMS" />
+		<typeAlias type="oms.kisvan.emart.model.dto.EmProductMasterOmsDTO" alias="EmProductMasterOmsDTO" />
+		<typeAlias type="oms.kisvan.emart.model.dto.EmProductMasterOmsEntity" alias="EmProductMasterOmsEntity" />
+		<typeAlias type="oms.kisvan.emart.model.dto.EM_DELIVERY_FEE_MASTER_OMS" alias="EM_DELIVERY_FEE_MASTER_OMS" />
+	</typeAliases>
+</configuration>

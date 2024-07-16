@@ -1,0 +1,806 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="pos">
+	<select id="getReferenceCode" resultType="EM_REFERENCE_CODE_OMS">
+		SELECT DEFINITION_CD, DEFINITION_NM FROM EM_REFERENCE_CODE_OMS WHERE GROUP_CD = #{stat} ORDER BY DEFINITION_CD
+	</select>
+
+	<select id="getPosList" resultType="EM_SETTLE_POS_ORD_OMS" parameterType="java.util.HashMap">
+		SELECT
+			RN,
+			ORD_DT,
+			CHNEL_CD,
+			CHNEL_NM,
+			STR_CD,
+			STR_NM,
+			CH_ORD_NO,
+			SALE_STORE,
+			SALE_STORE_NM,
+			DTORD_NO,
+			EM_ORD_NO,
+			TRANL_CD,
+			ORD_AMT,
+			ORD_STAT,
+			NPAY_ORD_NO,
+			PICKUP_CD,
+			MFC_TP_CD,
+			USER_NM,
+			REG_DATE
+		FROM(
+			SELECT
+				ORD_DT,
+				CHNEL_CD,
+				CHNEL_NM,
+				STR_CD,
+				STR_NM,
+				CH_ORD_NO,
+				SALE_STORE,
+				SALE_STORE_NM,
+				DTORD_NO,
+				EM_ORD_NO,
+				TRANL_CD,
+				ORD_AMT,
+				ORD_STAT,
+				NPAY_ORD_NO,
+				PICKUP_CD,
+				MFC_TP_CD,
+				USER_NM,
+				REG_DATE,
+				ROWNUM RN
+			FROM(
+				SELECT
+					NVL(A.ORD_DT, ' ') ORD_DT,  -- 주문일자(PK)
+					NVL(A.CHNEL_CD, ' ') CHNEL_CD,  -- 제휴사구분코드(PK)
+					NVL(B.CPN_NM, ' ') CHNEL_NM,  -- 제휴사구분코드명
+					NVL(A.STR_CD, ' ') STR_CD,  -- 점포코드(PK)
+					NVL(C.CPN_NM, ' ') STR_NM,  -- 점포명
+					NVL(A.CH_ORD_NO, ' ') CH_ORD_NO,    -- 채널사주문번호(PK)
+					NVL(A.SALE_STORE, ' ') SALE_STORE,  -- 매출발생점포코드(PK)
+					NVL(F.CPN_NM, ' ') SALE_STORE_NM,  -- 매출발생점포명(PK)
+					NVL(A.DTORD_NO, ' ') DTORD_NO,  -- 상세주문번호(PK)
+					NVL(A.EM_ORD_NO, ' ') EM_ORD_NO,    -- 이마트주문번호(PK)
+					NVL(E.CPN_NM, A.TRANL_CD) TRANL_CD,  -- 배송업체
+					NVL(A.ORD_AMT, '') ORD_AMT,    -- 주문금액(배달비제외)
+					NVL(D.DEFINITION_NM, ' ') ORD_STAT,  -- 주문상태
+					NVL(A.NPAY_ORD_NO, ' ') NPAY_ORD_NO,    -- 네이버 NPAY번호
+					NVL(H.DEFINITION_NM, ' ') PICKUP_CD,    -- 픽업코드
+					NVL(I.DEFINITION_NM, ' ') MFC_TP_CD,    -- MFC구분
+					NVL(G.USER_NM, ' ') USER_NM,    -- 사용자코드
+					NVL(A.REG_DATE, '') REG_DATE   -- 등록일시
+				FROM EM_SETTLE_POS_ORD_OMS A
+				INNER JOIN EM_COMPANY_MASTER_OMS B ON (B.CPN_CD = A.CHNEL_CD AND B.CPN_TYPE = 'ORDER')
+				<if test='occd!=null and !occd.equals("")'>
+					AND B.CPN_CD = #{occd}
+				</if>
+				LEFT JOIN EM_COMPANY_MASTER_OMS C ON (C.CPN_CD = A.STR_CD AND C.CPN_TYPE = 'STORE')
+				LEFT JOIN EM_REFERENCE_CODE_OMS D ON (D.DEFINITION_CD = A.ORD_STAT AND D.GROUP_CD = 'P_ORD_STAT')
+				LEFT JOIN EM_COMPANY_MASTER_OMS E ON (E.CPN_CD = A.TRANL_CD AND E.CPN_TYPE = 'DELIVERY')
+				LEFT JOIN EM_COMPANY_MASTER_OMS F ON (F.CPN_CD = A.SALE_STORE AND F.CPN_TYPE = 'STORE')
+				LEFT JOIN EM_USER_ACCOUNT_OMS G ON (G.USER_CD = A.USER_CD)
+				LEFT JOIN EM_REFERENCE_CODE_OMS H ON (H.DEFINITION_CD = A.PICKUP_CD AND H.GROUP_CD = 'PICKUP_CD')
+				LEFT JOIN EM_REFERENCE_CODE_OMS I ON (I.DEFINITION_CD = A.MFC_TP_CD AND I.GROUP_CD = 'MFC_TP_CD')
+				<![CDATA[
+					WHERE A.ORD_DT BETWEEN #{sdate} AND #{edate}
+				]]>
+				<choose>
+					<when test="stype.equals('nomal')">
+						AND A.MFC_TP_CD = '0'
+						<if test='scd!=null and !scd.equals("")'>
+							AND A.STR_CD = #{scd}
+						</if>
+					</when>
+					<when test="stype.equals('bsdc')">
+						AND A.MFC_TP_CD NOT IN ('0')
+						<if test='scd!=null and !scd.equals("")'>
+							AND A.SALE_STORE = #{scd}
+						</if>
+					</when>
+					<otherwise>
+						<if test='scd!=null and !scd.equals("")'>
+							AND A.SALE_STORE = #{scd}
+						</if>
+					</otherwise>
+				</choose>
+				<if test='ono!=null and !ono.equals("")'>
+					AND A.DTORD_NO LIKE '%'||#{ono}
+				</if>
+				<if test='chono!=null and !chono.equals("")'>
+					AND A.CH_ORD_NO LIKE '%'||#{chono}
+				</if>
+				<if test='emono!=null and !emono.equals("")'>
+					AND A.EM_ORD_NO LIKE '%'||#{emono}
+				</if>
+				<if test='ordst!=null and !ordst.equals("")'>
+                    AND A.ORD_STAT = #{ordst}
+				</if>
+				ORDER BY A.ORD_DT DESC, A.REG_DATE DESC
+			)
+			<![CDATA[ WHERE ROWNUM <= #{cri.pageNum} * #{cri.amount} ]]>
+		)
+		<![CDATA[ WHERE RN > (#{cri.pageNum}-1) * #{cri.amount} ]]> 
+	</select>
+	<!-- pos / 중계 대사조회 -->
+	<select id="getCompareData_Relay" resultType="COMPARE_RELAY" parameterType="java.util.HashMap">
+		SELECT 
+		    ORD_DT_P,
+		    CHNEL_CD_P,
+		    CHNEL_NM_P,
+		    EM_ORD_NO_P,
+		    DTORD_NO_P,
+		    STR_CD_P,
+		    SALE_STORE_P,
+		    ORD_AMT_P,
+		    ORD_STAT_P,
+		    ORD_STAT_NM_P,
+		    STATE_RESULT_P,
+		    MFC_TP_CD_P,
+		    ORD_TIME_R,
+		    FRANCHISE_CODE_R,
+		    FRANCHISE_NAME_R,
+		    ORD_ID_R,
+		    DTORD_NO_R,
+		    STORE_ID_R,
+		    SALE_STORE_R,
+		    ACT_AMT_R,
+		    ORD_STATE_R,
+		    STATE_RESULT_R,
+		    MFC_TP_CD_R
+		FROM (
+		    SELECT
+		    	A.ORD_DT AS ORD_DT_P,
+		        A.CHNEL_CD AS CHNEL_CD_P,
+		        A.CHNEL_NM AS CHNEL_NM_P,
+		        A.EM_ORD_NO AS EM_ORD_NO_P,
+		        A.DTORD_NO AS DTORD_NO_P,
+		        A.STR_CD AS STR_CD_P,
+		        A.SALE_STORE AS SALE_STORE_P,
+		        A.ORD_AMT AS ORD_AMT_P,
+		        A.ORD_STAT AS ORD_STAT_P,
+		        A.ORD_STAT_NM AS ORD_STAT_NM_P,
+		        A.STATE_RESULT AS STATE_RESULT_P,
+		        A.MFC_TP_CD AS MFC_TP_CD_P
+		    FROM
+		    (
+		        SELECT
+		            ORD_DT,
+		            CHNEL_CD,
+		            C.CPN_NM AS CHNEL_NM,
+		            EM_ORD_NO,
+		            DTORD_NO,
+		            STR_CD,
+		            SALE_STORE,
+		            CASE
+		            	WHEN A.ORD_STAT IN ('7002','8991','9991','9992','9993','9994','9995','9996','9997','9998','9999')
+		            	THEN 0 
+		            	ELSE ORD_AMT
+		            	END AS ORD_AMT,
+		            ORD_STAT,
+		            A.MFC_TP_CD,
+		            D.DEFINITION_NM AS ORD_STAT_NM,
+		            B.DEFINITION_NM AS STATE_RESULT
+		        FROM EM_SETTLE_POS_ORD_OMS A
+		        INNER JOIN EM_COMPANY_MASTER_OMS B ON(B.CPN_CD = A.SALE_STORE)
+		        LEFT JOIN EM_REFERENCE_CODE_OMS B ON(A.ORD_STAT = B.DEFINITION_CD AND B.GROUP_CD = 'STATE_RESULT')
+		        LEFT JOIN EM_COMPANY_MASTER_OMS C ON(C.CPN_CD = A.CHNEL_CD AND C.CPN_TYPE = 'ORDER')
+		        LEFT JOIN EM_REFERENCE_CODE_OMS D ON(A.ORD_STAT = D.DEFINITION_CD AND D.GROUP_CD = 'P_ORD_STAT')
+		        WHERE A.ORD_DT BETWEEN TO_CHAR(TO_DATE(#{month}, 'YYYYMM'), 'YYYYMMDDHH24MISS') 
+		        AND TO_CHAR((ADD_MONTHS(TO_DATE(#{month}, 'YYYYMM'), '1') + (INTERVAL '-1' SECOND)), 'YYYYMMDDHH24MISS')
+		        <!-- 자릿수를 6자리로 맞추고 between을 사용해 기간을 잡음  date형의 데이터를 문자형으로 불러와서 yyyymm으로 형식을 지정하고 다음월1일가까지 불러온후 -1일을 해줌 -->
+		        <choose>
+					<when test="stype.equals('nomal')">
+						AND A.MFC_TP_CD = '0'
+					</when>
+					<when test="stype.equals('bsdc')">
+						AND A.MFC_TP_CD NOT IN ('0')
+					</when>
+				</choose>
+		    ) A
+		    LEFT JOIN (
+		        SELECT
+		            SUBSTR(A.ORD_TIME, 0, 8) AS ORD_TIME,
+		            A.FRANCHISE_CODE,
+		            A.ORD_ID,
+		            A.DTORD_NO,
+		            A.STORE_ID,
+		            A.SALE_STORE,
+		            CASE 
+		                WHEN C.ORD_STAT IN ('7002','8991','9991','9992','9993','9994','9995','9996','9997','9998','9999')
+		                THEN 0
+		                ELSE ACT_AMT
+		            END AS ACT_AMT,
+		            A.ORD_STATE,
+		            DECODE(A.ORD_STATE, 'commit', 'commit', 'cancel', 'cancel', 'error') AS STATE_RESULT
+		        FROM TB_ORDER_STATE A
+		        INNER JOIN EM_COMPANY_MASTER_OMS B ON(B.CPN_CD = A.STORE_ID)
+		        LEFT JOIN EM_SETTLE_POS_ORD_OMS C ON(C.EM_ORD_NO = A.ORD_ID AND C.SALE_STORE = A.SALE_STORE)
+		    ) B
+		    ON(
+		    A.ORD_DT = B.ORD_TIME AND 
+		    A.CHNEL_CD = B.FRANCHISE_CODE AND 
+		    A.EM_ORD_NO = B.ORD_ID AND 
+		    A.STR_CD = B.STORE_ID AND
+		    A.SALE_STORE = B.SALE_STORE AND
+		    A.ORD_AMT = B.ACT_AMT AND
+		    A.STATE_RESULT = B.STATE_RESULT)
+		    WHERE B.ORD_TIME IS NULL
+		    ) A FULL JOIN (
+		    SELECT
+			    A.ORD_TIME AS ORD_TIME_R,
+			    A.FRANCHISE_CODE AS FRANCHISE_CODE_R,
+			    A.FRANCHISE_NAME AS FRANCHISE_NAME_R,
+			    A.ORD_ID AS ORD_ID_R,
+			    A.DTORD_NO AS DTORD_NO_R,
+			    A.STORE_ID AS STORE_ID_R,
+			    A.SALE_STORE AS SALE_STORE_R,
+			    A.ACT_AMT AS ACT_AMT_R,
+			    A.ORD_STATE AS ORD_STATE_R,
+			    A.STATE_RESULT AS STATE_RESULT_R,
+			    A.MFC_TP_CD AS MFC_TP_CD_R
+			FROM
+			(
+			    SELECT
+			    	SUBSTR(A.ORD_TIME, 0, 8) AS ORD_TIME,
+			        A.FRANCHISE_CODE,
+			        D.CPN_NM AS FRANCHISE_NAME,
+			        A.ORD_ID,
+			        A.DTORD_NO,
+			        A.STORE_ID,
+			        A.SALE_STORE,
+			        A.MFC_TP_CD,
+			        CASE 
+			            WHEN C.ORD_STAT IN ('7002','8991','9991','9992','9993','9994','9995','9996','9997','9998','9999')
+			            THEN 0
+			            ELSE ACT_AMT
+			        END AS ACT_AMT,
+			        A.ORD_STATE,
+			        DECODE(A.ORD_STATE, 'commit', 'commit', 'cancel', 'cancel', 'error') AS STATE_RESULT
+			    FROM TB_ORDER_STATE A
+			    INNER JOIN EM_COMPANY_MASTER_OMS B ON(B.CPN_CD = A.STORE_ID)
+			    LEFT JOIN EM_SETTLE_POS_ORD_OMS C ON(C.EM_ORD_NO = A.ORD_ID AND C.SALE_STORE = A.SALE_STORE)
+			    LEFT JOIN EM_COMPANY_MASTER_OMS D ON(D.CPN_CD = A.FRANCHISE_CODE AND D.CPN_TYPE = 'ORDER')
+			    WHERE A.ORD_TIME BETWEEN TO_CHAR(TO_DATE(#{month}, 'YYYYMM'), 'YYYYMMDDHH24MISS') 
+		        AND TO_CHAR((ADD_MONTHS(TO_DATE(#{month}, 'YYYYMM'), '1') + (INTERVAL '-1' SECOND)), 'YYYYMMDDHH24MISS')
+		        <!-- ord_time은 12자리여서 자릿수를 6자리로 맞추고 between을 사용해 기간을 잡음  date형의 데이터를 문자형으로 불러와서 yyyymm으로 형식을 지정하고 다음월1일가까지 불러온후 -1일을 해줌 -->
+		        <choose>
+					<when test="stype.equals('nomal')">
+						AND A.MFC_TP_CD = '0'
+					</when>
+					<when test="stype.equals('bsdc')">
+						AND A.MFC_TP_CD NOT IN ('0')
+					</when>
+				</choose>
+			) A
+			LEFT JOIN (
+			    SELECT
+			        ORD_DT,
+			        CHNEL_CD,
+			        EM_ORD_NO,
+			        DTORD_NO,
+			        STR_CD,
+			        SALE_STORE,
+			        ORD_AMT,
+			        ORD_STAT,
+			        B.DEFINITION_NM AS STATE_RESULT
+			    FROM EM_SETTLE_POS_ORD_OMS A
+			    LEFT JOIN EM_REFERENCE_CODE_OMS B ON(A.ORD_STAT = B.DEFINITION_CD AND B.GROUP_CD = 'STATE_RESULT')
+			    <!-- LEFT JOIN EM_REFERENCE_CODE_OMS B ON(A.ORD_STAT = B.DEFINITION_CD AND B.GROUP_CD = 'STATE_RESULT') -->
+			    LEFT JOIN EM_COMPANY_MASTER_OMS C ON(C.CPN_CD = A.CHNEL_CD AND C.CPN_TYPE = 'ORDER')
+			) B
+			ON(
+			B.ORD_DT = A.ORD_TIME AND
+			B.CHNEL_CD = A.FRANCHISE_CODE AND
+			B.EM_ORD_NO = A.ORD_ID AND
+			B.STR_CD = A.STORE_ID AND
+			B.SALE_STORE = A.SALE_STORE AND
+			B.ORD_AMT = A.ACT_AMT AND
+			B.STATE_RESULT = A.STATE_RESULT ) WHERE B.ORD_DT IS NULL 
+			) B ON(A.EM_ORD_NO_P = B.ORD_ID_R AND A.SALE_STORE_P = B.SALE_STORE_R )
+		ORDER BY ORD_DT_P, CHNEL_CD_P, ORD_TIME_R, FRANCHISE_CODE_R
+			
+	</select>
+	<!-- 중개 / 채널 대사 -->
+	<select id="getCompareData_Order" resultType="COMPARE_RELAY" parameterType="java.util.HashMap">
+		SELECT 
+			ORD_TIME_R, 			-- 주문시간(yyyy.MM.dd HH:mm:ss..)
+			FRANCHISE_CODE_R, 		-- 채널사코드
+			ORD_ID_R, 				-- 이마트주문번호(주문번호)
+			DTORD_NO_R, 			-- 상세주문번호
+			STORE_ID_R,				-- 매장코드
+			SALE_STORE_R,		 	-- 매출발생점포코드
+			ACT_AMT_R,				-- 주문금액
+			ORD_STATE_R,			-- 주문상태
+			ORD_STATE_NM_R,			-- 주문건에대한 정의?(환불완료,점포취소 기타등등)
+			STATE_RESULT_R,			-- 주문상태에대한 commit,cancel,error 값을표현
+			MFC_TP_CD_R,			-- BSD 구분
+			ORD_DT_C,				-- 주문일자
+			CHNEL_CD_C,				-- 채널사코드
+			EM_ORD_NO_C,			-- 이마트주문번호(주문번호)
+			DTORD_NO_C,				-- 상세주문번호
+			STR_CD_C,				-- 매장코드
+			SALE_STORE_C,			-- 매출발생점포코드
+			ORD_AMT_C,				-- 주문금액
+			ORD_STATE_C,			-- 주문상태
+		    ORD_STATE_NM_C,			-- 주문건에대한 정의?(환불완료,점포취소 기타등등)
+			STATE_RESULT_C,			-- 주문상태에대한 commit,cancel,error 값을표현
+			MFC_TP_CD_C				-- BSD 구분
+			<!-- R은 중계,C는 채널 -->
+		FROM (
+			SELECT 
+		        A.ORD_TIME AS ORD_TIME_R,
+		        A.FRANCHISE_CODE AS FRANCHISE_CODE_R,
+		        A.ORD_ID AS ORD_ID_R,
+		        A.DTORD_NO AS DTORD_NO_R,
+		        A.STORE_ID AS STORE_ID_R,
+		        A.SALE_STORE AS SALE_STORE_R,
+		        A.ACT_AMT AS ACT_AMT_R,
+		        A.ORD_STAT AS ORD_STATE_R,
+		        C.DEFINITION_NM AS ORD_STATE_NM_R,
+		        A.STATE_RESULT AS STATE_RESULT_R,
+		        A.MFC_TP_CD AS MFC_TP_CD_R
+		    FROM (
+		        SELECT
+		            SUBSTR(ORD_TIME, 0, 8) AS ORD_TIME,
+		             <!-- ORD_TIME은 초단위까지 있어서 SUBSTR을 써서 채널테이블에 ORD_DT랑 자릿수 맞추기위해 씀 --> 
+		            A.FRANCHISE_CODE,
+		            A.ORD_ID,
+		            A.DTORD_NO,
+		            A.STORE_ID,
+		            A.SALE_STORE,
+		            A.ACT_AMT, 
+		            B.ORD_STAT,
+		            A.TOT_AMT,
+		            A.MFC_TP_CD,
+		            DECODE(A.ORD_STATE, 'commit', 'commit', 'cancel', 'cancel', 'error') AS STATE_RESULT
+		            		<!-- A.ORD_STATE 값이 commit이면 commit cancle이면cancle 그외 는 error처리 -->
+		        FROM TB_ORDER_STATE A
+		        INNER JOIN EM_SETTLE_POS_ORD_OMS B ON(B.EM_ORD_NO = A.ORD_ID AND B.ORD_STAT IN('0002','0003','0004','0005','0006'))
+		       <!-- 중계데이터에는 정상건만 출력 (이유는 요기요에서는 당일취소건을 주지않아서 채널사데이터에서만 당일취소데이터가 출력됨 그래서 비교하기위해서 중계데이터에서는 출력되지않는다) -->
+		        WHERE A.ORD_TIME BETWEEN TO_CHAR(TO_DATE(#{month}, 'YYYYMM'), 'YYYYMMDDHH24MISS') 
+		        AND TO_CHAR((ADD_MONTHS(TO_DATE(#{month}, 'YYYYMM'), '1') + (INTERVAL '-1' SECOND)), 'YYYYMMDDHH24MISS')
+		        <!-- ord_time은 12자리여서 자릿수를 6자리로 맞추고 between을 사용해 기간을 잡음  date형의 데이터를 문자형으로 불러와서 yyyymm으로 형식을 지정하고 다음월1일가까지 불러온후 -1일을 해줌 -->
+		        <choose>
+					<when test="stype.equals('nomal')">
+						AND A.MFC_TP_CD = '0'
+					</when>
+					<when test="stype.equals('bsdc')">
+						AND A.MFC_TP_CD NOT IN ('0')
+					</when>
+				</choose>
+		    ) A
+		    LEFT JOIN (
+		        SELECT 
+		            ORD_DT,
+		            PAY_DT,
+		            CHNEL_CD,
+		            EM_ORD_NO,
+		            DTORD_NO,
+		            STR_CD,
+		            SALE_STORE,
+		            ORD_AMT,
+		            STATE_RESULT,
+		            MFC_TP_CD
+		        FROM EM_SETTLE_ORD_CH_VIEW
+		    ) B ON (
+		        B.CHNEL_CD = A.FRANCHISE_CODE AND 
+		        B.EM_ORD_NO = A.ORD_ID AND
+		        B.STR_CD = A.STORE_ID AND 
+		        B.SALE_STORE = A.SALE_STORE AND 
+		        B.ORD_AMT = A.ACT_AMT AND 
+		        B.STATE_RESULT = A.STATE_RESULT
+		    )
+		    LEFT JOIN EM_REFERENCE_CODE_OMS C ON(C.DEFINITION_CD = A.ORD_STAT AND GROUP_CD = 'P_ORD_STAT')
+		    <!--EM_REFERENCE_CODE_OMS에있는 주문접수및 취소 환불 구분 -->
+		    WHERE B.ORD_DT IS NULL 
+		    <!-- is null 사용하는 이유는 full join을 해서 없는 값을 null처리를 해서 없는데이터만 추출하기위해서 -->
+		   <!-- 여기까지는 중계(TB_ORDER_STATE)에는 있고 채널(EM_SETTLE_ORD_CH_VIEW)에는 없는것을표출하기 위한 쿼리 -->
+		) A FULL JOIN (
+		<!-- 풀조인하는 이유는 중계데이터(TB_ORDER_STATE)와 채널(EM_SETTLE_ORD_CH_VIEW)랑 비교하기위해서 사용 -->
+			SELECT 
+				A.SETTLE_MONTH AS SETTLE_MONTH_C,
+		     	A.ORD_DT AS ORD_DT_C,
+		        A.CHNEL_CD AS CHNEL_CD_C,
+		        A.EM_ORD_NO AS EM_ORD_NO_C,
+		        A.DTORD_NO AS DTORD_NO_C,
+		        A.STR_CD AS STR_CD_C,
+		        A.SALE_STORE AS SALE_STORE_C,
+		        A.ORD_AMT AS ORD_AMT_C,
+		        A.ORD_STAT AS ORD_STATE_C,
+		        C.DEFINITION_NM AS ORD_STATE_NM_C,
+		        A.STATE_RESULT AS STATE_RESULT_C,
+		        A.MFC_TP_CD AS MFC_TP_CD_C
+		    FROM (
+		        SELECT 
+		        	A.SETTLE_MONTH,
+		            A.ORD_DT,
+		            A.PAY_DT,
+		            A.CHNEL_CD,
+		            A.EM_ORD_NO,
+		            A.DTORD_NO,
+		            A.STR_CD,
+		            A.SALE_STORE,
+					A.ORD_AMT, 
+		            B.ORD_STAT,
+		            A.STATE_RESULT,
+		            A.MFC_TP_CD 
+		        FROM EM_SETTLE_ORD_CH_VIEW A
+		        LEFT JOIN EM_SETTLE_POS_ORD_OMS B ON(B.EM_ORD_NO = A.EM_ORD_NO)
+		        WHERE A.SETTLE_MONTH = #{month}
+		        <choose>
+					<when test="stype.equals('nomal')">
+						AND A.MFC_TP_CD = '0'
+					</when>
+					<when test="stype.equals('bsdc')">
+						AND A.MFC_TP_CD NOT IN ('0')
+					</when>
+				</choose>
+		        <!-- 우선은  WHERE 조건문으로 BSD구분을 일반매장고정으로만 조회 되게끔 처리 함 (추후에 조건문으로 0,1 코드로 구분 지어야함)--> 
+		    ) A
+		    LEFT JOIN (
+		        SELECT
+		            SUBSTR(A.ORD_TIME, 0, 8) AS ORD_TIME,
+		            A.FRANCHISE_CODE,
+		            A.ORD_ID,
+		            A.DTORD_NO,
+		            A.STORE_ID,
+		            A.SALE_STORE,
+		            A.ACT_AMT, <!-- 배송비제외 -->
+		            A.TOT_AMT, <!-- 배송비포함 -->
+		            DECODE(A.ORD_STATE, 'commit', 'commit', 'cancel', 'cancel', 'error') AS STATE_RESULT
+		        FROM TB_ORDER_STATE A
+		        INNER JOIN EM_SETTLE_POS_ORD_OMS B ON(B.EM_ORD_NO = A.ORD_ID)
+		    ) B ON (
+		        A.CHNEL_CD = B.FRANCHISE_CODE AND 
+		        A.EM_ORD_NO = B.ORD_ID	AND
+		        A.STR_CD = B.STORE_ID AND
+		        A.SALE_STORE = B.SALE_STORE AND 
+		       	A.ORD_AMT = B.ACT_AMT AND 
+		        A.STATE_RESULT = B.STATE_RESULT
+		    )
+		    LEFT JOIN EM_REFERENCE_CODE_OMS C ON(C.DEFINITION_CD = A.ORD_STAT AND GROUP_CD = 'P_ORD_STAT')
+		      WHERE B.ORD_TIME IS NULL 
+		  <!-- 채널(EM_SETTLE_ORD_CH_VIEW)에는 있고 중계(TB_ORDER_STATE)에는 없는 데이터를 보여준다. -->
+		) B ON(B.EM_ORD_NO_C = A.ORD_ID_R AND B.SALE_STORE_C = A.SALE_STORE_R)
+		ORDER BY ORD_TIME_R, FRANCHISE_CODE_R, ORD_DT_C, CHNEL_CD_C 	
+	</select>
+	<!-- 중계 / 배달 대사조회 -->
+	<select id="getCompareData_Delivery" resultType="COMPARE_RELAY" parameterType="java.util.HashMap">
+		SELECT 
+		    ORD_TIME_R,
+		    FRANCHISE_CODE_R,
+		    ORD_ID_R,
+		    ACT_AMT_R,
+		    TOT_AMT_R,
+		    STATE_RESULT_R,
+		    ORD_DT_D,
+		    CHNEL_CD_D,
+		    EM_ORD_NO_D,
+		    ACT_AMT_D,
+		    TOT_AMT_D,
+		    STATE_RESULT_D
+		FROM (
+			SELECT 
+		        A.ORD_TIME AS ORD_TIME_R,
+		        A.FRANCHISE_CODE AS FRANCHISE_CODE_R,
+		        A.ORD_ID AS ORD_ID_R,
+		        A.ACT_AMT AS ACT_AMT_R,
+		        A.TOT_AMT AS TOT_AMT_R,
+		        A.STATE_RESULT AS STATE_RESULT_R
+		    FROM (
+		        SELECT
+		            SUBSTR(A.ORD_TIME, 0, 8) AS ORD_TIME,
+		            A.FRANCHISE_CODE,
+		            A.ORD_ID,
+		            A.ACT_AMT,
+		            A.TOT_AMT,
+		            DECODE(A.ORD_STATE, 'commit', 'commit', 'cancel', 'cancel', 'error') AS STATE_RESULT
+		        FROM TB_ORDER_STATE A
+		        WHERE  A.ORD_TIME BETWEEN TO_CHAR(TO_DATE(#{month}, 'YYYYMM'), 'YYYYMMDDHH24MISS') 
+		        AND TO_CHAR((ADD_MONTHS(TO_DATE(#{month}, 'YYYYMM'), '1') + (INTERVAL '-1' SECOND)), 'YYYYMMDDHH24MISS')
+		        <!-- ord_time은 12자리여서 자릿수를 6자리로 맞추고 between을 사용해 기간을 잡음  date형의 데이터를 문자형으로 불러와서 yyyymm으로 형식을 지정하고 다음월1일가까지 불러온후 -1일을 해줌 --> 
+		         <choose>
+					<when test="stype.equals('nomal')">
+						AND A.MFC_TP_CD = '0'
+					</when>
+					<when test="stype.equals('bsdc')">
+						AND A.MFC_TP_CD NOT IN ('0')
+					</when>
+				</choose>
+		        AND A.DELIVERY_ID IS NOT NULL 
+		        AND A.DELIVERY_VENDOR_CODE != '91' --픽업
+		        AND A.RST_CD != '3308' --라이더취소
+		    ) A
+		    LEFT JOIN (
+		        SELECT 
+		            ORD_DT,
+		            CHNEL_CD,
+		            EM_ORD_NO,
+		            STR_NM,
+		            ACT_AMT,
+		            TOT_AMT,
+		            STATE_RESULT 
+		        FROM EM_SETTLE_DV_CH_VIEW
+		    ) B ON (
+		        B.EM_ORD_NO = A.ORD_ID 
+		    )
+		    WHERE B.ORD_DT IS NULL
+		) A FULL JOIN (
+			SELECT 
+				A.SETTLE_MONTH AS SETTLE_MONTH_D,
+		        A.ORD_DT AS ORD_DT_D,
+		        A.CHNEL_CD AS CHNEL_CD_D,
+		        A.CPN_NM AS CHNEL_NM_D,
+		        A.EM_ORD_NO AS EM_ORD_NO_D,
+		        A.STR_NM AS STR_NM_D,
+		        A.ACT_AMT AS ACT_AMT_D,
+		        A.TOT_AMT AS TOT_AMT_D,
+		        A.STATE_RESULT AS STATE_RESULT_D
+		    FROM (
+		        SELECT 
+		        	A.SETTLE_MONTH,
+		            A.ORD_DT,
+		            A.CHNEL_CD,
+		            B.CPN_NM,
+		            A.EM_ORD_NO,
+		            A.STR_NM,
+		            A.ACT_AMT,
+		            A.TOT_AMT,
+		            A.STATE_RESULT 
+		        FROM EM_SETTLE_DV_CH_VIEW A
+		        LEFT JOIN EM_COMPANY_MASTER_OMS B ON(B.CPN_CD = A.CHNEL_CD AND B.CPN_TYPE = 'DELIVERY')
+		        WHERE A.SETTLE_MONTH = #{month}
+		    ) A
+		    LEFT JOIN (
+		        SELECT
+		            SUBSTR(A.ORD_TIME, 0, 8) AS ORD_TIME,
+		            A.ORD_ID,
+		            A.ACT_AMT,
+		            A.TOT_AMT,
+		            DECODE(A.ORD_STATE, 'commit', 'commit', 'cancel', 'cancel', 'error') AS STATE_RESULT
+		        FROM TB_ORDER_STATE A
+		        WHERE A.DELIVERY_ID IS NOT NULL AND DELIVERY_VENDOR_CODE != '91' AND A.RST_CD != '3308' 
+		        <choose>
+					<when test="stype.equals('nomal')">
+						AND A.MFC_TP_CD = '0'
+					</when>
+					<when test="stype.equals('bsdc')">
+						AND A.MFC_TP_CD NOT IN ('0')
+					</when>
+				</choose>
+		    ) B ON (
+		        A.EM_ORD_NO = B.ORD_ID  
+		    )
+		    WHERE B.ORD_TIME IS NULL
+		) B ON(B.EM_ORD_NO_D = A.ORD_ID_R)
+		ORDER BY ORD_TIME_R, FRANCHISE_CODE_R, ORD_DT_D, CHNEL_CD_D
+	</select>
+	
+	<select id="getPosList_CNT" resultType="int" parameterType="java.util.HashMap">
+		SELECT
+			COUNT(*)
+		FROM EM_SETTLE_POS_ORD_OMS A
+		INNER JOIN EM_COMPANY_MASTER_OMS B ON (B.CPN_CD = A.CHNEL_CD AND B.CPN_TYPE = 'ORDER')
+		<if test='occd!=null and !occd.equals("")'>
+			AND B.CPN_CD = #{occd}
+		</if>
+		LEFT JOIN EM_COMPANY_MASTER_OMS C ON (C.CPN_CD = A.STR_CD AND C.CPN_TYPE = 'STORE')
+		LEFT JOIN EM_REFERENCE_CODE_OMS D ON (D.DEFINITION_CD = A.ORD_STAT AND D.GROUP_CD = 'P_ORD_STAT')
+		LEFT JOIN EM_COMPANY_MASTER_OMS E ON (E.CPN_CD = A.TRANL_CD AND E.CPN_TYPE = 'DELIVERY')
+		LEFT JOIN EM_COMPANY_MASTER_OMS F ON (F.CPN_CD = A.SALE_STORE AND F.CPN_TYPE = 'STORE')
+		LEFT JOIN EM_USER_ACCOUNT_OMS G ON (G.USER_CD = A.USER_CD)
+		LEFT JOIN EM_REFERENCE_CODE_OMS H ON (H.DEFINITION_CD = A.PICKUP_CD AND H.GROUP_CD = 'PICKUP_CD')
+		LEFT JOIN EM_REFERENCE_CODE_OMS I ON (I.DEFINITION_CD = A.MFC_TP_CD AND I.GROUP_CD = 'MFC_TP_CD')
+		<![CDATA[
+			WHERE A.ORD_DT BETWEEN #{sdate} AND #{edate}
+		]]>
+		 <choose>
+			<when test="stype.equals('nomal')">
+				AND A.MFC_TP_CD = '0'
+				<if test='scd!=null and !scd.equals("")'>
+					AND A.STR_CD = #{scd}
+				</if>
+			</when>
+			<when test="stype.equals('bsdc')">
+				AND A.MFC_TP_CD NOT IN ('0')
+				<if test='scd!=null and !scd.equals("")'>
+					AND A.SALE_STORE = #{scd}
+				</if>
+			</when>
+			<otherwise>
+				<if test='scd!=null and !scd.equals("")'>
+					AND A.SALE_STORE = #{scd}
+				</if>
+			</otherwise>
+		</choose> 
+		<if test='ono!=null and !ono.equals("")'>
+			AND A.DTORD_NO LIKE '%'||#{ono}
+		</if>
+		<if test='chono!=null and !chono.equals("")'>
+			AND A.CH_ORD_NO LIKE '%'||#{chono}
+		</if>
+		<if test='emono!=null and !emono.equals("")'>
+			AND A.EM_ORD_NO LIKE '%'||#{emono}
+		</if>
+		<if test='ordst!=null and !ordst.equals("")'>
+            AND A.ORD_STAT = #{ordst}
+		</if>
+	</select>
+	
+		<select id="getStoreOrdNoDetailsInfo" resultType="storeOrdNoDetailsInfoDTO" parameterType="java.util.HashMap">
+		SELECT ROW_NUMBER() OVER(ORDER BY C.CPN_NM) RN, B.STR_CD, C.CPN_NM AS STR_NM, K.DEFINITION_NM AS STO_TYPE_NM, J.DEFINITION_NM PICKUP_NM, 
+			   A.ORD_DATE, H.ORD_DT, H.DELIVERY_TIME, A.CH_ORD_NO, B.NPAY_ORD_NO,
+			   F.CPN_NM AS ORDER_NM, G.CPN_NM AS DELIVERY_NM, B.ORD_AMT, A.ORD_AMT, '' AS ADD_DEPOSIT,
+			   A.DELIVER_FEE, A.DELIVER_EVENT_FUND, A.LEVY, H.TOT_AMT AS DELIVERY_AMT, '' AS DELIVERY_SUBSIDY_BEFOR,
+			   '' AS DELIVERY_SUBSIDY_AFTER, A.PLATFORM_FEE, A.PLATFORM_CNT, I.DELIVERY_CNT, A.KIS_FEE AS KIS_FEE_BEFOR, 
+			   A.KIS_FEE AS KIS_FEE_AFTER, '' AS BIGO, '' AS IS_REFLECTION
+		  FROM EM_SYNTH_ORD_CH_VIEW A
+		 INNER JOIN EM_SETTLE_POS_ORD_OMS B ON A.CHNEL_CD = B.CHNEL_CD AND A.CH_ORD_NO = B.EM_ORD_NO 
+		 INNER JOIN EM_COMPANY_MASTER_OMS C ON B.STR_CD = C.CPN_CD AND C.CPN_TYPE = 'STORE'
+		 INNER JOIN EM_STORE_OPERATION_OMS D ON B.STR_CD = D.STO_CD 
+		 INNER JOIN TB_ORDER_STATE E ON A.CHNEL_CD = E.FRANCHISE_CODE AND A.CH_ORD_NO = E.ORD_ID
+		 INNER JOIN EM_COMPANY_MASTER_OMS F ON A.CHNEL_CD = F.CPN_CD AND F.CPN_TYPE = 'ORDER'
+		  LEFT OUTER JOIN EM_COMPANY_MASTER_OMS G ON E.DELIVERY_VENDOR_CODE = G.CPN_CD AND G.CPN_TYPE = 'DELIVERY'
+		  LEFT OUTER JOIN EM_SETTLE_DV_CH_VIEW H ON E.DELIVERY_VENDOR_CODE = H.CHNEL_CD AND E.ORD_ID = H.EM_ORD_NO  
+		  LEFT OUTER JOIN EM_SYNTH_DV_CH_VIEW I ON E.DELIVERY_VENDOR_CODE = I.CHNEL_CD AND E.ORD_ID = I.ORD_ID 
+		  LEFT OUTER JOIN EM_REFERENCE_CODE_OMS J ON B.PICKUP_CD = J.DEFINITION_CD AND J.GROUP_CD = 'PICKUP_CD'
+		  LEFT OUTER JOIN EM_REFERENCE_CODE_OMS K ON D.STO_TYPE = K.DEFINITION_CD AND K.GROUP_CD = 'STO_TYPE'
+	 	WHERE A.SETTLE_MONTH = #{month} 			<!-- 월검색 -->
+		<choose> <!-- MFC 구분, 매장명검색 -->
+			<when test="stype.equals('nomal')">
+				AND B.MFC_TP_CD = '0'
+				<if test='scd!=null and !scd.equals("")'>
+					AND B.STR_CD = #{scd}
+				</if>
+			</when>
+			<when test="stype.equals('bsdc')">
+				AND B.MFC_TP_CD NOT IN ('0')
+				<if test='scd!=null and !scd.equals("")'>
+					AND B.STR_CD = #{scd}
+				</if>
+			</when>
+			<otherwise>
+				<if test='scd!=null and !scd.equals("")'>
+					AND B.STR_CD = #{scd}
+				</if>
+			</otherwise>
+		</choose> 
+		<if test='occd!=null and !occd.equals("")'>
+		   AND A.CHNEL_CD  = #{occd}	<!-- 채널사명검색 -->
+		</if>
+		   <!-- 주문번호 검색 -->
+	   	<if test='ono!=null and !ono.equals("")'>
+	  		AND A.CH_ORD_NO LIKE '%'||#{ono}||'%'
+	   	</if>
+	 	ORDER BY C.CPN_NM
+	</select>
+	
+	<select id="getStoreOrdNoDetailsCnt" resultType="int" parameterType="java.util.HashMap">
+		SELECT COUNT(*)
+		  FROM EM_SYNTH_ORD_CH_VIEW A
+		 INNER JOIN EM_SETTLE_POS_ORD_OMS B ON A.CHNEL_CD = B.CHNEL_CD AND A.CH_ORD_NO = B.EM_ORD_NO 
+		 INNER JOIN EM_COMPANY_MASTER_OMS C ON B.STR_CD = C.CPN_CD AND C.CPN_TYPE = 'STORE'
+		 INNER JOIN EM_STORE_OPERATION_OMS D ON B.STR_CD = D.STO_CD 
+		 INNER JOIN TB_ORDER_STATE E ON A.CHNEL_CD = E.FRANCHISE_CODE AND A.CH_ORD_NO = E.ORD_ID
+		 INNER JOIN EM_COMPANY_MASTER_OMS F ON A.CHNEL_CD = F.CPN_CD AND F.CPN_TYPE = 'ORDER'
+		  LEFT OUTER JOIN EM_COMPANY_MASTER_OMS G ON E.DELIVERY_VENDOR_CODE = G.CPN_CD AND G.CPN_TYPE = 'DELIVERY'
+		  LEFT OUTER JOIN EM_SETTLE_DV_CH_VIEW H ON E.DELIVERY_VENDOR_CODE = H.CHNEL_CD AND E.ORD_ID = H.EM_ORD_NO  
+		  LEFT OUTER JOIN EM_SYNTH_DV_CH_VIEW I ON E.DELIVERY_VENDOR_CODE = I.CHNEL_CD AND E.ORD_ID = I.ORD_ID 
+		  LEFT OUTER JOIN EM_REFERENCE_CODE_OMS J ON B.PICKUP_CD = J.DEFINITION_CD AND J.GROUP_CD = 'PICKUP_CD'
+		  LEFT OUTER JOIN EM_REFERENCE_CODE_OMS K ON D.STO_TYPE = K.DEFINITION_CD AND K.GROUP_CD = 'STO_TYPE'
+	 	WHERE A.SETTLE_MONTH = #{month} 			<!-- 월검색 -->
+		<choose> <!-- MFC 구분, 매장명검색 -->
+			<when test="stype.equals('nomal')">
+				AND B.MFC_TP_CD = '0'
+				<if test='scd!=null and !scd.equals("")'>
+					AND B.STR_CD = #{scd}
+				</if>
+			</when>
+			<when test="stype.equals('bsdc')">
+				AND B.MFC_TP_CD NOT IN ('0')
+				<if test='scd!=null and !scd.equals("")'>
+					AND B.STR_CD = #{scd}
+				</if>
+			</when>
+			<otherwise>
+				<if test='scd!=null and !scd.equals("")'>
+					AND B.STR_CD = #{scd}
+				</if>
+			</otherwise>
+		</choose> 
+		<if test='occd!=null and !occd.equals("")'>
+		   AND A.CHNEL_CD  = #{occd}	<!-- 채널사명검색 -->
+		</if>
+		   <!-- 주문번호 검색 -->
+	   	<if test='ono!=null and !ono.equals("")'>
+	  		AND A.CH_ORD_NO LIKE '%'||#{ono}||'%'
+	   	</if>
+	 	ORDER BY C.CPN_NM
+	</select>
+	
+	<!-- 점별 월 정산 조회 -->
+	<select id="getStoreMonthDetailsInfo" resultType="storeMonthDetailsInfoDTO" parameterType="java.util.HashMap">
+		SELECT ROW_NUMBER() OVER(ORDER BY B.CPN_NM) RN, A.STR_CD, B.CPN_NM AS STR_NM, D.DEFINITION_NM AS STO_TYPE_NM, A.ORDER_ORD_AMT, 
+		   '' AS ADD_DEPOSIT, A.DELIVER_FEE, A.DELIVER_EVENT_FUND, A.LEVY, A.DELIVERY_AMT,
+		   '' AS DELIVERY_SUBSIDY, A.PLATFORM_FEE, A.PLATFORM_CNT, A.DELIVERY_CNT, '' AS NON_MATCH_ORD_DV, 
+		   A.POS_CNT, '' AS NON_MATCH_ORD_DV_POS, A.KIS_FEE, '' AS IS_MODIFY, '' AS IS_COMPLET, 
+		   '' AS IS_SETTLE
+	    FROM (
+	  		SELECT B.STR_CD, SUM(A.ORD_AMT) AS ORDER_ORD_AMT, SUM(A.DELIVER_FEE) AS DELIVER_FEE, SUM(A.DELIVER_EVENT_FUND) AS DELIVER_EVENT_FUND, SUM(A.LEVY) AS LEVY,
+	  		SUM(D.TOT_AMT) AS DELIVERY_AMT, SUM(A.PLATFORM_FEE) AS PLATFORM_FEE, SUM(A.PLATFORM_CNT) AS PLATFORM_CNT, SUM(E.DELIVERY_CNT) AS DELIVERY_CNT, COUNT(B.STR_CD) AS POS_CNT,
+	  		SUM(A.KIS_FEE) AS KIS_FEE
+	  		FROM EM_SYNTH_ORD_CH_VIEW A
+			 INNER JOIN EM_SETTLE_POS_ORD_OMS B ON A.CHNEL_CD = B.CHNEL_CD AND A.CH_ORD_NO = B.EM_ORD_NO 
+			 INNER JOIN TB_ORDER_STATE C ON A.CHNEL_CD = C.FRANCHISE_CODE AND A.CH_ORD_NO = C.ORD_ID
+			  LEFT OUTER JOIN EM_SETTLE_DV_CH_VIEW D ON C.DELIVERY_VENDOR_CODE = D.CHNEL_CD AND C.ORD_ID = D.EM_ORD_NO
+			  LEFT OUTER JOIN EM_SYNTH_DV_CH_VIEW E ON C.DELIVERY_VENDOR_CODE = E.CHNEL_CD AND C.ORD_ID = E.ORD_ID 
+			 WHERE A.SETTLE_MONTH = #{month} 	<!-- 월검색 -->
+			  <choose> <!-- MFC 구분, 매장명검색 -->
+			      <when test="stype.equals('nomal')">
+				      AND B.MFC_TP_CD = '0'
+					  <if test='scd!=null and !scd.equals("")'>
+					      AND B.STR_CD = #{scd}
+					  </if>
+					  </when>
+					  <when test="stype.equals('bsdc')">
+					  	  AND B.MFC_TP_CD NOT IN ('0')
+					  <if test='scd!=null and !scd.equals("")'>
+							AND B.STR_CD = #{scd}
+					  </if>
+				  </when>
+				  <otherwise>
+					  <if test='scd!=null and !scd.equals("")'>
+					   	  AND B.STR_CD = #{scd}
+					  </if>
+			      </otherwise>
+			  </choose>					
+			   <if test='occd!=null and !occd.equals("")'>
+		   	  	AND A.CHNEL_CD  = #{occd}	<!-- 채널사명검색 -->
+			   </if>
+			 GROUP BY B.STR_CD
+			) A
+	  INNER JOIN EM_COMPANY_MASTER_OMS B ON A.STR_CD = B.CPN_CD AND B.CPN_TYPE = 'STORE'
+	  INNER JOIN EM_STORE_OPERATION_OMS C ON A.STR_CD = C.STO_CD 
+	  LEFT OUTER JOIN EM_REFERENCE_CODE_OMS D ON C.STO_TYPE = D.DEFINITION_CD AND D.GROUP_CD = 'STO_TYPE' 
+	</select>
+	
+	<select id="getStoreMonthDetailsCnt" resultType="int" parameterType="java.util.HashMap">
+		SELECT COUNT(*)
+	    FROM (
+	  		SELECT B.STR_CD, SUM(A.ORD_AMT) AS ORDER_ORD_AMT, SUM(A.DELIVER_FEE) AS DELIVER_FEE, SUM(A.DELIVER_EVENT_FUND) AS DELIVER_EVENT_FUND, SUM(A.LEVY) AS LEVY,
+	  		SUM(D.TOT_AMT) AS DELIVERY_AMT, SUM(A.PLATFORM_FEE) AS PLATFORM_FEE, SUM(A.PLATFORM_CNT) AS PLATFORM_CNT, SUM(E.DELIVERY_CNT) AS DELIVERY_CNT, COUNT(B.STR_CD) AS POS_CNT,
+	  		SUM(A.KIS_FEE) AS KIS_FEE
+	  		FROM EM_SYNTH_ORD_CH_VIEW A
+			 INNER JOIN EM_SETTLE_POS_ORD_OMS B ON A.CHNEL_CD = B.CHNEL_CD AND A.CH_ORD_NO = B.EM_ORD_NO 
+			 INNER JOIN TB_ORDER_STATE C ON A.CHNEL_CD = C.FRANCHISE_CODE AND A.CH_ORD_NO = C.ORD_ID
+			  LEFT OUTER JOIN EM_SETTLE_DV_CH_VIEW D ON C.DELIVERY_VENDOR_CODE = D.CHNEL_CD AND C.ORD_ID = D.EM_ORD_NO
+			  LEFT OUTER JOIN EM_SYNTH_DV_CH_VIEW E ON C.DELIVERY_VENDOR_CODE = E.CHNEL_CD AND C.ORD_ID = E.ORD_ID 
+			 WHERE A.SETTLE_MONTH = #{month} 	<!-- 월검색 -->
+			  <choose> <!-- MFC 구분, 매장명검색 -->
+			      <when test="stype.equals('nomal')">
+				      AND B.MFC_TP_CD = '0'
+					  <if test='scd!=null and !scd.equals("")'>
+					      AND B.STR_CD = #{scd}
+					  </if>
+					  </when>
+					  <when test="stype.equals('bsdc')">
+					  	  AND B.MFC_TP_CD NOT IN ('0')
+					  <if test='scd!=null and !scd.equals("")'>
+							AND B.STR_CD = #{scd}
+					  </if>
+				  </when>
+				  <otherwise>
+					  <if test='scd!=null and !scd.equals("")'>
+					   	  AND B.STR_CD = #{scd}
+					  </if>
+			      </otherwise>
+			  </choose>
+			   <if test='occd!=null and !occd.equals("")'>
+		   	  	AND A.CHNEL_CD  = #{occd}	<!-- 채널사명검색 -->
+			   </if>
+			 GROUP BY B.STR_CD
+			) A
+	  INNER JOIN EM_COMPANY_MASTER_OMS B ON A.STR_CD = B.CPN_CD AND B.CPN_TYPE = 'STORE'
+	  INNER JOIN EM_STORE_OPERATION_OMS C ON A.STR_CD = C.STO_CD 
+	  LEFT OUTER JOIN EM_REFERENCE_CODE_OMS D ON C.STO_TYPE = D.DEFINITION_CD AND D.GROUP_CD = 'STO_TYPE'
+	</select>
+	
+</mapper>

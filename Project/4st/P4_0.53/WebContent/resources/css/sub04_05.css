@@ -1,0 +1,443 @@
+.btn_excel {
+	margin: 6px 7px;
+}
+
+.main_div {
+	padding: 25px;
+	border: 1px solid #C3C3C3;
+	border-top: 0;
+	background-color: white;
+	overflow: auto;
+	height: calc(100vh - 255px);
+}
+
+#header_title{
+	word-spacing: normal;
+}
+
+.ch_title_box{
+ 	border: 1px solid #0564D2;
+	border-radius: 1px;
+	width: 150px;
+	height: 32px;
+	font-family: inherit;
+	/* 폰트 상속 */
+	font-size: 14px;
+	color: #0564D2;
+	font-weight: bold;
+	margin-right: 15px;
+	padding-left: 10px;
+	cursor: pointer;
+	outline: none;
+	
+	/* 네이티브 외형 감추기 */
+	-webkit-appearance: none;
+    -moz-appearance: none;
+    appearance: none;
+    
+    background: url(../img/btn_checkbox_blue.png) no-repeat right 4px center;
+	background-size: 22px;
+}
+
+#wsp{
+	display: inline-block;
+	word-spacing: 15px;
+}
+
+.ui-datepicker{ 
+	z-index: 999 !important;
+}
+
+.search_form {
+	border: 1px solid #C3C3C3;
+	width: 150px;
+	height: 30px;
+	display: inline-block;
+	border-radius: 1px;
+	margin-right: 10px;
+}
+
+.search_form2 {
+	border: 1px solid #C3C3C3;
+	width: 180px;
+	height: 30px;
+	display: inline-block;
+	border-radius: 1px;
+	margin-right: 10px;
+}
+
+.search_form > img {
+	width: auto;
+	vertical-align: middle;
+	cursor: pointer;
+}
+
+.search_box {
+	margin-right: 10px;
+	width: 120px;
+	height: 30px;
+	display: inline-block;
+	border: 0px;
+}
+
+.select_box {
+	border: 1px solid #C3C3C3;
+	border-radius: 1px;
+	width: 150px;
+	height: 32px;
+	font-family: inherit;
+	/* 폰트 상속 */
+	font-size: 12px;
+	color: #717171;
+	font-weight: bold;
+	margin-left: 30px;
+	margin-right: 15px;
+	outline: none;
+}
+
+.dateType1, .dateType3 {
+	border: 1px solid #C3C3C3;
+	border-radius: 1px;
+	margin: 0px;
+	background-color: #FFF;
+	color: #717171;
+	width: 50px;
+	height: 33px;
+	display: inline-block;
+	padding: 5px;
+	cursor: pointer;
+}
+
+.dateType2 {
+	border: 1px solid #C3C3C3;
+	border-right: 0;
+	border-left: 0;
+	border-radius: 1px;
+	background-color: #FFF;
+	color: #717171;
+	width: 50px;
+	height: 33px;
+	display: inline-block;
+	padding: 5px;
+	cursor: pointer;
+}
+
+.dateType3 {
+	margin-right: 22px;
+}
+
+.active_button {
+     color: #0564D2;
+     border: 2px solid #0564D2;
+     display: inline-block;
+     font-weight: bolder;
+ }
+.button_date:hover {
+	cursor: pointer;
+}
+
+.dhx_grid-row:hover {
+	background-color: #FFF;
+	cursor: default;
+}
+
+.input_date {
+	margin: 0px 6px;
+	padding-left: 5px;
+	border: 2px solid #0564D2;
+	border-radius: 1px;
+	width: 100px;
+	height: 33px;
+	display: inline-block;
+	color: #717171;
+	text-align: left;
+	cursor: pointer;
+}
+.input_date2 {
+	margin: 0px 6px;
+	padding-left: 5px;
+	border: 2px solid #0564D2;
+	border-radius: 1px;
+	width: 100px;
+	height: 33px;
+	display: inline-block;
+	color: #717171;
+	text-align: left;
+	cursor: pointer;
+}
+.div_fheader2{
+	border : none;
+	padding:10px; 
+	margin-top:15px; 
+	position:relative;
+	right:20px;
+	} 
+
+.upload_select_box {
+    border: 1px solid #C3C3C3;
+    border-radius: 1px;
+    padding-left: 20px;
+    width: 360px;
+    height: 36px;
+    font-family: inherit;
+    /* 폰트 상속 */
+    font-size: 15px;
+    color: #717171;
+    font-weight: bold;
+    margin-top: 30px;
+    margin-bottom: 16px;
+    outline: none;
+    cursor: pointer;
+    
+    /* 네이티브 외형 감추기 */
+	-webkit-appearance: none;
+    -moz-appearance: none;
+    appearance: none;
+    
+    background: url(../img/btn_checkbox.png) no-repeat right 4px center;
+	background-size: 28px;
+}
+.sample_select_box {
+    border: 1px solid #C3C3C3;
+    border-radius: 1px;
+    padding-left: 20px;
+    width: 280px;
+    height: 36px;
+    font-family: inherit;
+    font-size: 15px;
+    color: #717171;
+    font-weight: bold;
+    outline: none;
+    cursor: pointer;
+    -webkit-appearance: none;
+    -moz-appearance: none;
+    appearance: none;
+    background: url(../img/btn_checkbox.png) no-repeat right 4px center;
+    background-size: 28px;
+}
+.upload_option, .view_option{
+	font-size: 15px;
+    color: #717171;
+}
+
+th, td{
+	white-space: nowrap;
+}
+
+option {
+    font-size: 12px;
+    float: none;
+    color: #717171;
+    font-weight: bold;
+    float: left;
+}
+
+.hide_div{
+	border: 5px solid #0564D2;
+	border-radius: 25px;
+	position: absolute;
+	background-color: white;
+	top: 50vh;
+	left: 50vw;
+	margin-top: -140px;
+	margin-left: -200px;
+	padding: 20px;
+    width: 400px;
+    height: 180px;
+    display: none;
+    text-align: center;
+}
+.shide_div{
+	border: 5px solid #0564D2;
+	border-radius: 25px;
+	position: absolute;
+	background-color: white;
+	top: 50vh;
+	left: 50vw;
+	margin-top: -140px;
+	margin-left: -200px;
+	padding: 30px;
+    width: 400px;
+    /* height: 100px; */
+    display: none;
+    text-align: center;
+}
+
+.show_div{
+	display: block;
+    z-index: 999;
+}
+
+#excelUploadForm{
+    display: flex;
+    flex-wrap: wrap;
+    align-content: center;
+    justify-content: center;
+    align-items: center;
+}
+#excelSampleForm{
+    display: flex;
+    flex-wrap: wrap;
+    align-content: center;
+    justify-content: center;
+    align-items: center;
+}
+.sample_option, .view_option{
+	font-size: 15px;
+    color: #717171;
+}
+.download_pop{
+    display: flex;
+    align-items: center;
+    justify-content: space-evenly;
+    flex-wrap: nowrap;
+    align-content: center;
+    flex-direction: row;
+    height: 100%;
+}
+.upload_div2{
+	text-align: center;
+	margin-top: 16px;
+}
+
+#excelFile{
+	width: 300px;
+}
+
+#btn_excel1{
+	display: inline-block;
+	margin: 10 5px;
+}
+
+#btn_excel2{
+	display: inline-block;
+	margin: 10px;
+}
+
+
+.filebox input[type="file"] {
+	position:absolute;
+	width:1px;
+	height:1px;
+	padding:0;
+	margin:-1px;
+	overflow:hidden;
+	clip:rect(0,0,0,0);
+	border:0;
+}
+.filebox label {
+	display:inline-block;
+	padding:4px 8px;
+	color:#fff;
+	font-size:inherit;
+	line-height:normal;
+	vertical-align:middle;
+	background-color: #0564D2;
+	cursor:pointer;
+	border:1px solid #ebebeb;
+	border-bottom-color:#e2e2e2;
+	border-radius:.25em;
+}
+/* named upload */ 
+.filebox .upload-name {
+	width: 280px;
+	display:inline-block;
+	padding:4px 8px;
+	/* label의 패딩값과 일치 */ font-size:inherit;
+	font-family:inherit;
+	line-height:normal;
+	vertical-align:middle;
+	background-color:#f5f5f5;
+	border:1px solid #ebebeb;
+	border-bottom-color:#e2e2e2;
+	border-radius:.25em;
+	-webkit-appearance:none;
+	/* 네이티브 외형 감추기 */ -moz-appearance:none;
+	appearance: none;
+}
+
+.tdInput, .defInput {
+    height: 25px;
+    border: none;
+    outline: none;
+}
+
+.row:hover, .input_hover {
+	background-color: #e0e0e0;
+	cursor: pointer;
+}
+
+#cancel_button, #save_button{
+	display: none;
+}
+
+.writeonly{
+	border: 1px solid #0564D2;
+}
+
+.edit{
+	pointer-events: none;
+}
+
+.editCompleted{
+	background-color: skyblue;
+}
+
+.input_date:focus {
+	outline: none;
+}
+
+.search_first_div {
+	display: inline-block;
+}
+
+option {
+	font-size: 12px;
+	float: none;
+	color: #717171;
+	font-weight: bold;
+	float: left;
+}
+
+th, td {
+	white-space: nowrap;
+}
+
+#dtono {
+	width: 170px;
+}
+
+#chono {
+	width: 170px;
+}
+
+.close_button {
+    position: absolute;
+    right: 42;
+    top: 5;
+    opacity: 0.3;
+}
+
+.close_button:hover {
+    opacity: 1;
+    cursor: pointer;
+}
+
+.close_button:before,
+.close_button:after {
+    position: absolute;
+    content: ' ';
+    left: 15px;
+    height: 30px;
+    width: 4px;
+    border-radius: 50px;
+    background-color: #333;
+}
+
+.close_button:before {
+    transform: rotate(45deg);
+}
+
+.close_button:after {
+    transform: rotate(-45deg);
+}

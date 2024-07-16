@@ -1,0 +1,142 @@
+/* !@@0701 new */
+
+.btn_excel {
+	margin: 6px 7px;
+}
+
+.main_div {
+	padding: 25px;
+	border: 1px solid #C3C3C3;
+	border-top: 0;
+	background-color: white;
+	overflow: auto;
+	height: calc(100vh - 255px);
+}
+
+.search_form2 {
+	border: 1px solid #C3C3C3;
+	width: 150px;
+	height: 30px;
+	display: inline-block;
+	border-radius: 1px;
+	margin-right: 10px;
+}
+
+.search_form>img {
+	width: auto;
+	vertical-align: middle;
+	cursor: pointer;
+}
+
+.search_box {
+	margin-right: 10px;
+	width: 120px;
+	height: 30px;
+	display: inline-block;
+	border: 0px;
+}
+
+
+.dateType1, .dateType3 {
+	border: 1px solid #C3C3C3;
+	border-radius: 1px;
+	margin: 0px;
+	background-color: #FFF;
+	color: #717171;
+	width: 50px;
+	height: 33px;
+	display: inline-block;
+	padding: 5px;
+	cursor: pointer;
+}
+
+.dateType2 {
+	border: 1px solid #C3C3C3;
+	border-right: 0;
+	border-left: 0;
+	border-radius: 1px;
+	background-color: #FFF;
+	color: #717171;
+	width: 50px;
+	height: 33px;
+	display: inline-block;
+	padding: 5px;
+	cursor: pointer;
+}
+
+.dateType3 {
+	margin-right: 22px;
+}
+
+.active_button {
+     color: #0564D2;
+     border: 2px solid #0564D2;
+     display: inline-block;
+     font-weight: bolder;
+ }
+.button_date:hover {
+	cursor: pointer;
+}
+
+.title_box{
+ 	border: 1px solid #0564D2;
+	border-radius: 1px;
+	width: 150px;
+	height: 32px;
+	font-family: inherit;
+	/* 폰트 상속 */
+	font-size: 14px;
+	color: #0564D2;
+	font-weight: bold;
+	margin-right: 15px;
+	padding-left: 10px;
+	cursor: pointer;
+	outline: none;
+	
+	/* 네이티브 외형 감추기 */
+	-webkit-appearance: none;
+    -moz-appearance: none;
+    appearance: none;
+    
+    background: url(../img/btn_checkbox_blue.png) no-repeat right 4px center;
+	background-size: 22px;
+}
+
+.dhx_grid-row:hover {
+	background-color: #FFF;
+	cursor: default;
+}
+
+
+
+.ui-datepicker{ 
+	z-index: 22 !important;
+}
+
+.search_first_div {
+	display: inline-block;
+}
+
+option {
+	font-size: 12px;
+	float: none;
+	color: #717171;
+	font-weight: bold;
+	float: left;
+}
+
+th, td {
+	white-space: nowrap;
+}
+
+#ono {
+	width: 140px;
+}
+
+#chono {
+	width: 140px;
+}
+
+#emono {
+	width: 140px;
+}

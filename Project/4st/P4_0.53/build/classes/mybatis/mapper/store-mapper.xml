@@ -1,0 +1,267 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="store">
+
+	<select id="storeSearch" resultType="EM_COMPANY_MASTER_OMS" parameterType="java.util.HashMap">
+	    SELECT
+	        RN,
+	        CPN_CD,
+	        CPN_NM,
+	        CPN_BIZ_TYPE, 
+	        MFC_TP_CD, 
+	        CPN_STATE, 
+	        CPN_ADDR,
+	        CPN_ADDR_DT,
+	        CPN_TEL,
+	        MNG_HPNO,
+	        DAY_START_TIME,
+	        DAY_END_TIME,
+	        ORD_CH_NM,
+	        DLV_CH_NM,
+	        IN_APP,
+	        REG_DATE,
+	        MDF_DATE
+	    FROM(
+	        SELECT
+	            CPN_CD,
+	            CPN_NM,
+	            CPN_BIZ_TYPE, 
+	            MFC_TP_CD, 
+	            CPN_STATE, 
+	            CPN_ADDR,
+	            CPN_ADDR_DT,
+	            CPN_TEL,
+	            MNG_HPNO,
+	            DAY_START_TIME,
+	            DAY_END_TIME,
+	            ORD_CH_NM,
+	            DLV_CH_NM,
+	            IN_APP,
+	            REG_DATE,
+	            MDF_DATE,
+	            ROWNUM RN
+	        FROM(
+	            SELECT 
+	                NVL(A.CPN_CD,' ') CPN_CD,
+	                NVL(A.CPN_NM, ' ') CPN_NM,
+	                NVL(A.CPN_BIZ_TYPE, ' ') CPN_BIZ_TYPE, 
+	                NVL(G.DEFINITION_NM, ' ') MFC_TP_CD, 
+	                NVL(B.DEFINITION_NM,' ') CPN_STATE,
+	                NVL(A.CPN_ADDR,' ') CPN_ADDR,
+	                NVL(A.CPN_ADDR_DT,' ') CPN_ADDR_DT,
+	                NVL(A.CPN_TEL,' ') CPN_TEL,
+	                NVL(A.MNG_HPNO, ' ') MNG_HPNO,
+	                NVL(C.DAY_START_TIME,' ') DAY_START_TIME,
+	                NVL(C.DAY_END_TIME,' ') DAY_END_TIME,
+	                NVL(F.ORD_CH_NM,' ') ORD_CH_NM,
+	                NVL(E.DLV_CH_NM,' ') DLV_CH_NM,
+	                NVL(A.IN_APP, ' ') IN_APP,
+	                NVL(A.REG_DATE,'') REG_DATE,
+	                NVL(A.MDF_DATE,'') MDF_DATE
+	            FROM EM_COMPANY_MASTER_OMS A
+	            INNER JOIN EM_REFERENCE_CODE_OMS B ON B.DEFINITION_CD = A.CPN_STATE
+	            AND B.GROUP_CD = 'CPN_STATE' AND A.CPN_TYPE = 'STORE'
+	            <if test='sst!=null and !sst.equals("")'>
+	                AND B.DEFINITION_CD IN (#{sst})
+	            </if>
+	            LEFT JOIN EM_STORE_OPERATION_OMS C ON C.STO_CD = A.CPN_CD
+	            LEFT JOIN (
+	                    SELECT A.STO_CD, B.CPN_NM AS DLV_CH_NM, B.CPN_CD AS DLV_CH_CD
+	                    FROM EM_STORE_OPERATION_OMS A
+	                    INNER JOIN EM_COMPANY_MASTER_OMS B ON B.CPN_TYPE = 'DELIVERY' AND B.CPN_CD = A.DELIVERY_CH_CD
+	            ) E ON E.STO_CD = A.CPN_CD
+	            LEFT JOIN (
+	                SELECT 
+	                    STO_CD,
+	                    ORD_CH_CD,
+	                    SUBSTR(
+	                        XMLAGG(
+	                            XMLELEMENT(COL ,',', ORD_CH_NM) ORDER BY ORD_CH_NM
+	                        ).EXTRACT('//text()').GETSTRINGVAL(), 2
+	                    ) AS ORD_CH_NM
+	                FROM (
+	                    SELECT STO_CD, CPN_NM AS ORD_CH_NM, CPN_CD AS ORD_CH_CD
+	                    FROM EM_COMPANY_MASTER_OMS A 
+	                    INNER JOIN EM_CHANNEL_STORE_OPERATION_OMS B
+	                    ON (B.CH_CD = A.CPN_CD) AND A.CPN_TYPE = 'ORDER'
+	                )
+	                GROUP BY STO_CD, ORD_CH_CD
+	            ) F ON F.STO_CD = A.CPN_CD
+	            LEFT JOIN EM_REFERENCE_CODE_OMS G ON G.DEFINITION_CD = A.MFC_TP_CD AND G.GROUP_CD = 'MFC_TP_CD'
+	            <where>
+	                <if test='scd!=null and !scd.equals("")'>
+	                    AND A.CPN_CD = #{scd}
+	                </if>
+	                <if test='occd!=null and !occd.equals("")'>
+	                    AND F.ORD_CH_CD = #{occd}
+	                </if>
+	                <if test='dccd!=null and !dccd.equals("")'>
+	                    AND E.DLV_CH_CD = #{dccd}
+	                </if>
+	            </where>
+	           
+	        ORDER BY CPN_NM
+	        )
+	        <![CDATA[ WHERE ROWNUM <= #{cri.pageNum} * #{cri.amount} ]]>              
+	    )
+	    <![CDATA[ WHERE RN > (#{cri.pageNum}-1) * #{cri.amount} ]]> 
+	</select>
+	
+	
+	
+	
+	
+	
+	
+	<select id="GetReferenceCode" resultType="EM_REFERENCE_CODE_OMS">
+		SELECT * FROM EM_REFERENCE_CODE_OMS WHERE GROUP_CD = 'CPN_STATE'
+	</select>	
+	
+	<select id="GetChannelFlag" resultType="EM_REFERENCE_CODE_OMS">
+		SELECT * FROM EM_REFERENCE_CODE_OMS WHERE GROUP_CD = 'CH_SEND_FLAG'
+	</select>	
+	
+	<!-- ##########################################Detail 0101########################################## -->
+	<!-- 매장 기본 정보 -->
+	<select id="storeDetail" resultType="EM_COMPANY_MASTER_OMS">
+		 SELECT 
+		 	A.CPN_CD, 
+		 	A.CPN_NM,
+		 	A.CEO_NM, 
+		 	A.CPN_TEL,
+		    A.HPNO,
+		    A.EMAIL, 
+		    A.CPN_STATE,
+		    B.DEFINITION_NM AS CPN_STATE_NM,
+		 	A.CPN_ADDR, 
+		 	A.CPN_ROAD_ADDR,
+		 	A.CPN_ADDR_DT, 
+		 	A.CPN_BIZ_NO,
+			A.CPN_IMAGE_URL,
+			A.CPN_DESC,
+			A.OPN_DT,
+			A.CPN_BIZ_TYPE,
+			A.MEMO,
+			A.MNG_NM,
+			A.MNG_HPNO,
+			A.FC_NM,
+			A.STATE_MDF_DATE,
+			A.IN_APP,
+			C.USER_NM AS REG_USER_NM,
+			A.REG_DATE,
+			D.USER_NM AS MDF_USER_NM,
+			A.MDF_DATE
+		FROM EM_COMPANY_MASTER_OMS A
+		INNER JOIN EM_REFERENCE_CODE_OMS B 
+			ON B.DEFINITION_CD = A.CPN_STATE 
+		    AND B.GROUP_CD = 'CPN_STATE'
+		LEFT OUTER JOIN EM_USER_ACCOUNT_OMS C ON (A.REG_USER_CD = C.USER_CD)
+		LEFT OUTER JOIN EM_USER_ACCOUNT_OMS D ON (A.MDF_USER_CD = D.USER_CD)
+		WHERE A.CPN_CD  = #{stocd}
+	</select>
+	
+	<!-- 매장 운영 정보 -->
+	<select id="storeOpertaionDetail" resultType="EM_STORE_OPERATION_OMS">
+		SELECT 
+			A.DAY_START_TIME, 
+			A.DAY_END_TIME, 
+			A.DELIVERY_PRICE, 
+			A.ESTIMATED_DELIVERY_TIME, 
+			A.MAXIMUM_ORDER_PRICE, 
+			A.MINIMUM_ORDER_PRICE, 
+			A.WEEKEND_START_TIME, 
+			A.WEEKEND_END_TIME,
+			A.HOLIDAY_START_TIME, 
+			A.HOLIDAY_END_TIME,
+			A.LOC_LAT,
+			A.LOC_LONG,
+			A.ACC_HOLDER,
+			A.BANK_NM,
+			A.ACC_NUM,
+			A.DELIVERY_CH_CD,
+			B.CPN_NM AS DELIVERY_CH_NM,
+			A.STOP_START_DAY,
+			A.STOP_END_DAY,
+			A.BREAK_TIME
+		FROM EM_STORE_OPERATION_OMS A
+		LEFT OUTER JOIN EM_COMPANY_MASTER_OMS B ON (B.CPN_CD = A.DELIVERY_CH_CD AND B.CPN_TYPE = 'DELIVERY')
+		WHERE STO_CD = #{stocd}
+	</select>
+	
+	<!-- 채널사 매장 운영 정보 -->
+	<select id="getChannelStoreOperation" resultType="EM_CHANNEL_STORE_OPERATION_OMS">
+		SELECT
+			A.CH_CD,
+			E.CPN_NM AS CH_NM,
+			A.STO_CD,
+			A.CH_STATE,
+			D.DEFINITION_NM AS CH_STATE_NM,
+			A.CH_SEND_FLAG,
+			F.DEFINITION_NM AS CH_SEND_FLAG_NM,
+			B.USER_NM AS REG_USER_NM,
+			A.REG_DATE,
+			C.USER_NM AS MDF_USER_NM,
+			A.MDF_DATE
+		FROM EM_CHANNEL_STORE_OPERATION_OMS A
+		LEFT OUTER JOIN EM_USER_ACCOUNT_OMS B ON (A.REG_USER_CD = B.USER_CD)
+		LEFT OUTER JOIN EM_USER_ACCOUNT_OMS C ON (A.MDF_USER_CD = C.USER_CD)
+		LEFT OUTER JOIN EM_REFERENCE_CODE_OMS D ON (D.DEFINITION_CD = A.CH_STATE AND D.GROUP_CD = 'CPN_STATE')
+		INNER JOIN EM_COMPANY_MASTER_OMS E ON (E.CPN_CD = A.CH_CD AND E.CPN_TYPE = 'ORDER')
+		LEFT OUTER JOIN EM_REFERENCE_CODE_OMS F ON (F.DEFINITION_CD  = A.CH_SEND_FLAG)
+			AND F.GROUP_CD = 'CH_SEND_FLAG'
+		WHERE STO_CD = #{stocd}
+		ORDER BY CH_NM
+	</select>
+
+	<select id="GetDeliveryList" resultType="EM_COMPANY_MASTER_OMS">
+		SELECT CPN_CD, CPN_NM FROM EM_COMPANY_MASTER_OMS WHERE CPN_TYPE = 'DELIVERY'
+	</select>
+
+	<!-- Paging 처리 위해 게시글 개수 가져오기 -->
+	<!-- 매장 검색 정보 총 게시글 개수 확인 -->
+	<select id="getSearchStoreTotal" resultType="int" parameterType="java.util.HashMap">
+		SELECT 
+		    COUNT(*)
+		FROM EM_COMPANY_MASTER_OMS A
+		INNER JOIN EM_REFERENCE_CODE_OMS B ON B.DEFINITION_CD = A.CPN_STATE
+		AND B.GROUP_CD = 'CPN_STATE' AND A.CPN_TYPE = 'STORE'
+		<if test='sst!=null and !sst.equals("")'>
+		    AND B.DEFINITION_CD IN (#{sst})
+		</if>
+		LEFT JOIN EM_STORE_OPERATION_OMS C ON C.STO_CD = A.CPN_CD
+		LEFT JOIN (
+		        SELECT A.STO_CD, B.CPN_NM AS DLV_CH_NM, B.CPN_CD AS DLV_CH_CD
+		        FROM EM_STORE_OPERATION_OMS A
+		        INNER JOIN EM_COMPANY_MASTER_OMS B ON B.CPN_TYPE = 'DELIVERY' AND B.CPN_CD = A.DELIVERY_CH_CD
+		) E ON E.STO_CD = A.CPN_CD
+		LEFT JOIN (
+		    SELECT 
+		        STO_CD,
+		        ORD_CH_CD,
+		        SUBSTR(
+		            XMLAGG(
+		                XMLELEMENT(COL ,',', ORD_CH_NM) ORDER BY ORD_CH_NM
+		            ).EXTRACT('//text()').GETSTRINGVAL(), 2
+		        ) AS ORD_CH_NM
+		    FROM (
+		        SELECT STO_CD, CPN_NM AS ORD_CH_NM, CPN_CD AS ORD_CH_CD
+		        FROM EM_COMPANY_MASTER_OMS A 
+		        INNER JOIN EM_CHANNEL_STORE_OPERATION_OMS B
+		        ON (B.CH_CD = A.CPN_CD) AND A.CPN_TYPE = 'ORDER'
+		    )
+		    GROUP BY STO_CD, ORD_CH_CD
+		) F ON F.STO_CD = A.CPN_CD
+		LEFT JOIN EM_REFERENCE_CODE_OMS G ON G.DEFINITION_CD = A.MFC_TP_CD AND G.GROUP_CD = 'MFC_TP_CD'
+		<where>
+		    <if test='scd!=null and !scd.equals("")'>
+		        AND A.CPN_CD = #{scd}
+		    </if>
+		    <if test='occd!=null and !occd.equals("")'>
+		        AND F.ORD_CH_CD = #{occd}
+		    </if>
+		    <if test='dccd!=null and !dccd.equals("")'>
+		        AND E.DLV_CH_CD = #{dccd}
+		    </if>
+		</where>
+	</select>
+</mapper>

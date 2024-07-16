@@ -1,0 +1,301 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="order">
+
+	<!-- 주문 내역 검색 -->
+	<select id="orderSearch" resultType="TB_ORDER_STATE" parameterType="java.util.HashMap">
+		SELECT
+			RN,
+			ORD_ID,
+			STORE_ID,
+			STORE_NM,
+			ORD_STATE,
+			FRANCHISE_CODE,
+			ORDER_CH_NM,
+			VANDOR_CODE,
+			DELIVER_FEE,
+			ORD_ADDR,
+			ORD_ADDR_DETAIL,
+			ORD_LAND_ADDR,
+			LAND_ADDR_DETAIL,
+			PHONE,
+			LOC_LAT,
+			LOC_LNG,
+			ORD_MSG,
+			ACT_AMT,
+			TOT_AMT,
+			TOT_VAT,
+			PAY_TYPE,
+			ORD_TYPE,
+			ORD_TIME,
+			PICKUP_CODE,
+			PICKUP_NAME,
+			EXPECTED_PICKUP_TIME,
+			ORD_NOTICE,
+			DELV_YN,
+			DELV_TIME,
+			ORD_MEMO,
+			REGDATE,
+			RST_CD,
+			RST_MSG,
+			MODI_DATE,
+			DELIVERY_ID,
+			DELIVERY_VENDOR_CODE,
+			DLV_CH_NM,
+			AUTO_CANCEL_ALARM,
+			CAR_NUMBER,
+			BIZITEMID,
+			SETTLE_NO,
+			SALE_STORE,
+			DTORD_NO
+		FROM(
+			SELECT
+				ORD_ID,
+				STORE_ID,
+				STORE_NM,
+				ORD_STATE,
+				FRANCHISE_CODE,
+				ORDER_CH_NM,
+				VANDOR_CODE,
+				DELIVER_FEE,
+				ORD_ADDR,
+				ORD_ADDR_DETAIL,
+				ORD_LAND_ADDR,
+				LAND_ADDR_DETAIL,
+				PHONE,
+				LOC_LAT,
+				LOC_LNG,
+				ORD_MSG,
+				ACT_AMT,
+				TOT_AMT,
+				TOT_VAT,
+				PAY_TYPE,
+				ORD_TYPE,
+				ORD_TIME,
+				PICKUP_CODE,
+				PICKUP_NAME,
+				EXPECTED_PICKUP_TIME,
+				ORD_NOTICE,
+				DELV_YN,
+				DELV_TIME,
+				ORD_MEMO,
+				REGDATE,
+				RST_CD,
+				RST_MSG,
+				MODI_DATE,
+				DELIVERY_ID,
+				DELIVERY_VENDOR_CODE,
+				DLV_CH_NM,
+				AUTO_CANCEL_ALARM,
+				CAR_NUMBER,
+				BIZITEMID,
+				SETTLE_NO,
+				SALE_STORE,
+				DTORD_NO,
+				ROWNUM RN
+			FROM(
+				SELECT
+					NVL(A.ORD_ID, ' ') ORD_ID, -- *주문ID
+					NVL(A.STORE_ID, ' ') STORE_ID, -- *가맹점 상점ID*
+					NVL(B.CPN_NM, ' ') STORE_NM, -- *가맹점 상점명*
+					NVL(C.DEFINITION_NM, ' ') ORD_STATE, -- *주문상태*
+					NVL(A.FRANCHISE_CODE, ' ') FRANCHISE_CODE, -- *가맹점코드*
+					NVL(D.CPN_NM, ' ') ORDER_CH_NM, -- *가맹점명*
+					NVL(A.VANDOR_CODE, ' ') VANDOR_CODE, -- *요기요-Vendor*
+					NVL(A.DELIVER_FEE, 0) DELIVER_FEE, -- *배송료*
+					NVL(A.ORD_ADDR, ' ') ORD_ADDR, -- *배송지 주소[지번]*
+					NVL(A.ORD_ADDR_DETAIL, ' ') ORD_ADDR_DETAIL, -- *배성지 주소[지번]상세*
+					NVL(A.ORD_LAND_ADDR, ' ') ORD_LAND_ADDR, -- *배송지 주소[행정]*
+					NVL(A.LAND_ADDR_DETAIL, ' ') LAND_ADDR_DETAIL, -- *배송지 주소[상세]*
+					NVL(A.PHONE, ' ') PHONE, -- *배송 연락처
+					NVL(A.LOC_LAT, ' ') LOC_LAT, -- *위도정보*
+					NVL(A.LOC_LNG, ' ') LOC_LNG, -- *경도정보*
+					NVL(A.ORD_MSG, ' ') ORD_MSG, -- *고객요청사항*
+					NVL(A.ACT_AMT, 0) ACT_AMT, -- *결제금액*
+					NVL(A.TOT_AMT, 0) TOT_AMT, -- *합계금액*
+					NVL(A.TOT_VAT, 0) TOT_VAT, -- *부가세*
+					NVL(A.PAY_TYPE, ' ') PAY_TYPE, -- *결제방식*
+					NVL(E.DEFINITION_NM, ' ') ORD_TYPE, -- *주문방식*
+					NVL(A.ORD_TIME, ' ') ORD_TIME, -- *결제시간*
+					NVL(A.PICKUP_CODE, ' ') PICKUP_CODE, -- *픽업코드*
+					NVL(G.DEFINITION_NM, ' ') PICKUP_NAME, -- *픽업코드명*
+					NVL(A.EXPECTED_PICKUP_TIME, ' ') EXPECTED_PICKUP_TIME, -- *픽업예상시간*
+					NVL(A.ORD_NOTICE, ' ') ORD_NOTICE, -- *주문공지*
+					NVL(A.DELV_YN, ' ') DELV_YN, -- *배송가능여부*
+					NVL(A.DELV_TIME, ' ') DELV_TIME, -- *배송 픽업예상시간*
+					NVL(A.ORD_MEMO, ' ') ORD_MEMO, -- *주문메모*
+					NVL(A.REGDATE, '') REGDATE, -- *등록일자*
+					NVL(A.RST_CD, ' ') RST_CD, -- *처리결과코드*
+					NVL(A.RST_MSG, ' ') RST_MSG, -- *처리결과메시지*
+					NVL(A.MODI_DATE, '') MODI_DATE, -- *최종변경일시*
+					NVL(A.DELIVERY_ID, ' ') DELIVERY_ID, -- *배송번호*
+					NVL(A.DELIVERY_VENDOR_CODE, ' ') DELIVERY_VENDOR_CODE, -- *배송업체코드*
+					NVL(F.CPN_NM, ' ') DLV_CH_NM, -- *배송업체명*
+					NVL(A.AUTO_CANCEL_ALARM, ' ') AUTO_CANCEL_ALARM, -- *자동취소알람상태*
+					NVL(A.CAR_NUMBER, ' ') CAR_NUMBER, -- *차량번호*
+					NVL(A.BIZITEMID, ' ') BIZITEMID, -- *BIZITEM*
+					NVL(A.SETTLE_NO, ' ') SETTLE_NO, -- *정산주문번호*
+					NVL(A.SALE_STORE, ' ') SALE_STORE, -- *매출발생점포코드*
+					NVL(A.DTORD_NO, ' ') DTORD_NO -- *상세주문번호*
+				FROM TB_ORDER_STATE A
+				LEFT JOIN EM_COMPANY_MASTER_OMS B ON B.CPN_CD = A.STORE_ID AND B.CPN_TYPE = 'STORE'
+				LEFT JOIN EM_REFERENCE_CODE_OMS C ON C.DEFINITION_CD = A.ORD_STATE AND C.GROUP_CD = 'T_ORD_STATE'
+				INNER JOIN EM_COMPANY_MASTER_OMS D ON D.CPN_CD = A.FRANCHISE_CODE AND D.CPN_TYPE = 'ORDER'
+				<if test='occd!=null and !occd.equals("")'>
+			    	AND D.CPN_CD = #{occd}
+				</if>
+				LEFT JOIN EM_REFERENCE_CODE_OMS E ON E.DEFINITION_CD = A.ORD_TYPE AND E.GROUP_CD = 'ORD_TYPE'
+				LEFT JOIN EM_COMPANY_MASTER_OMS F ON F.CPN_CD = A.DELIVERY_VENDOR_CODE AND F.CPN_TYPE = 'DELIVERY'
+				LEFT JOIN EM_REFERENCE_CODE_OMS G ON G.DEFINITION_CD = A.PICKUP_CODE AND G.GROUP_CD = 'PICKUP_CODE'
+				<![CDATA[
+					WHERE SUBSTR(A.ORD_TIME, 0, 8) BETWEEN #{sdate} AND #{edate}
+				]]>
+				<if test='scd!=null and !scd.equals("")'>
+					AND A.STORE_ID = #{scd}
+				</if>
+				<if test='ono!=null and !ono.equals("")'>
+			    	AND A.ORD_ID LIKE '%'||#{ono}
+				</if>
+				<if test='chono!=null and !chono.equals("")'>
+			    	AND A.DTORD_NO LIKE '%'||#{chono}
+				</if>
+				<if test='ordst!=null and !ordst.equals("")'>
+				    <choose>
+				        <when test="ordst.equals('Success')">
+				            AND A.ORD_STATE != 'cancel'
+				        </when>
+				        <when test="ordst.equals('Canceled')">
+				            AND A.ORD_STATE = 'cancel'
+				        </when>
+				        <otherwise>
+				            AND A.ORD_STATE = #{ordst}
+				        </otherwise>
+				    </choose>
+				</if>
+				ORDER BY A.REGDATE DESC, ORD_TIME DESC
+			)                    
+			<![CDATA[ WHERE ROWNUM <= #{cri.pageNum} * #{cri.amount} ]]>
+		)
+		<![CDATA[ WHERE RN > (#{cri.pageNum}-1) * #{cri.amount} ]]> 
+	</select>
+
+	<!-- =========== DETAIL 0301 =========== -->
+	<!-- 주문 상세 정보 -->
+	<select id="orderDetail" resultType="TB_ORDER_STATE" parameterType="TB_ORDER_STATE">
+		SELECT 
+			A.ORD_ID, 
+			A.STORE_ID, 
+			B.STO_NM, 
+			C.DEFINITION_NAME AS ORD_STATE, 
+			D.FRANCHISE_NAME, 
+			E.DELIVERY_VENDOR_NAME, 
+			A.DELIVER_FEE, 
+			A.ACT_AMT, 
+			A.TOT_AMT, 
+			A.ORD_ADDR, 
+			A.ORD_ADDR_DETAIL,
+			A.PHONE, 
+			F.DEFINITION_NAME AS PICKUP_CODE, 
+			A.CAR_NUMBER, 
+			A.EXPECTED_PICKUP_TIME, 
+			A.ORD_MEMO, 
+			A.ORD_MSG, 
+			A.REGDATE,
+			A.MODI_DATE, 
+			A.RST_MSG
+		FROM TB_ORDER_STATE A
+		LEFT OUTER JOIN EM_COMPANY_MASTER_OMS B ON B.CPN_CD = A.STORE_ID
+		LEFT OUTER JOIN TB_REFERENCE_CODE C ON C.DEFINITION_CODE = A.ORD_STATE
+			AND C.GROUP_CODE = 'ORD_STATE'
+		LEFT OUTER JOIN EM_COMPANY_MASTER_OMS D ON D.CPN_CD = A.FRANCHISE_CODE
+		 	AND D.FRANCHISE_CODE = #{FRANCHISE_CODE}
+		LEFT OUTER JOIN EM_COMPANY_MASTER_OMS E ON E.CPN_CD = A.DELIVERY_VENDOR_CODE
+			LEFT JOIN TB_REFERENCE_CODE F ON F.DEFINITION_CODE = A.PICKUP_CODE
+			AND F.GROUP_CD = 'PICKUP_CODE'
+		WHERE A.ORD_ID = #{ORD_ID} 
+		AND A.STORE_ID = #{STORE_ID} 
+		AND A.FRANCHISE_CODE = #{FRANCHISE_CODE}
+	</select>
+
+	<!-- 주문 메뉴 정보 -->
+	<select id="orderMenu" resultType="EM_ORDER_MENU_OMS" parameterType="TB_ORDER_STATE">
+		SELECT 
+			ORD_ID,
+			MENU_CD,
+			MENU_NM,
+			QTY,
+			PRICE,
+			AMOUNT,
+			MENU_CD_SEQ 
+		FROM EM_ORDER_MENU_OMS 
+		WHERE ORD_ID = #{ORD_ID}
+		ORDER BY MENU_CD_SEQ
+	</select>
+
+	<!-- 주문 이력 정보 -->
+	<select id="orderHistory" resultType="EM_ORDER_HISTORY_OMS" parameterType="TB_ORDER_STATE">
+		SELECT 
+			A.HISTORY_ID,
+			A.ORD_ID, 
+			B.DEFINITION_NM AS HISTORY_TYPE, 
+			C.DEFINITION_NM AS ORDER_STATE, 
+			D.DEFINITION_NM AS DELIVERY_STATE, 
+			A.STATUS_CD, 
+			A.STATUS_MSG,
+			A.REG_USER_CD,
+			E.USER_NM AS REG_USER_NM,
+			A.REG_DATE 
+		FROM EM_ORDER_HISTORY_OMS A
+		LEFT OUTER JOIN EM_REFERENCE_CODE_OMS B ON B.DEFINITION_CD = A.HISTORY_TYPE AND B.GROUP_CD = 'AF'
+		LEFT OUTER JOIN EM_REFERENCE_CODE_OMS C ON C.DEFINITION_CD = A.ORDER_STATE AND C.GROUP_CD = 'AE'
+		LEFT OUTER JOIN EM_REFERENCE_CODE_OMS D ON D.DEFINITION_CD = A.DELIVERY_STATE AND D.GROUP_CD = 'AD'
+		LEFT OUTER JOIN EM_USER_ACCOUNT_OMS E ON E.USER_CD = A.REG_USER_CD
+		WHERE A.ORD_ID = #{ORD_ID}
+		ORDER BY A.HISTORY_ID DESC
+	</select>
+	
+	<select id="getOrderStateList" resultType="EM_REFERENCE_CODE_OMS">
+		SELECT DEFINITION_CD, DEFINITION_NM FROM EM_REFERENCE_CODE_OMS WHERE GROUP_CD = 'AE' ORDER BY MEMO
+	</select>
+	
+	<!-- Paging 처리 위해 게시글 개수 가져오기 -->
+	<!-- 주문 정보 총 게시글 개수 확인 -->
+	<select id="getSearchOrderTotal" resultType="int" parameterType="java.util.HashMap">
+		SELECT
+			COUNT(*)
+		FROM TB_ORDER_STATE A
+		LEFT JOIN EM_COMPANY_MASTER_OMS B ON B.CPN_CD = A.STORE_ID AND B.CPN_TYPE = 'STORE'
+		LEFT JOIN EM_REFERENCE_CODE_OMS C ON C.DEFINITION_CD = A.ORD_STATE AND C.GROUP_CD = 'AE'
+		INNER JOIN EM_COMPANY_MASTER_OMS D ON D.CPN_CD = A.FRANCHISE_CODE AND D.CPN_TYPE = 'ORDER'
+		<if test='occd!=null and !occd.equals("")'>
+	    	AND D.CPN_CD = #{occd}
+		</if>
+		LEFT JOIN EM_REFERENCE_CODE_OMS E ON E.DEFINITION_CD = A.ORD_TYPE AND E.GROUP_CD = 'AC'
+		LEFT JOIN EM_COMPANY_MASTER_OMS F ON F.CPN_CD = A.DELIVERY_VENDOR_CODE AND F.CPN_TYPE = 'DELIVERY'
+			<![CDATA[
+			WHERE SUBSTR(A.ORD_TIME, 0, 8) BETWEEN #{sdate} AND #{edate}
+		]]>
+		<if test='scd!=null and !scd.equals("")'>
+			AND A.STORE_ID = #{scd}
+		</if>
+		<if test='ono!=null and !ono.equals("")'>
+	    	AND A.ORD_ID LIKE '%'||#{ono}
+		</if>
+		<if test='chono!=null and !chono.equals("")'>
+	    	AND A.DTORD_NO LIKE '%'||#{chono}
+		</if>
+		<if test='ordst!=null and !ordst.equals("")'>
+		    <choose>
+		        <when test="ordst.equals('Success')">
+		            AND A.ORD_STATE != 'cancel'
+		        </when>
+		        <when test="ordst.equals('Canceled')">
+		            AND A.ORD_STATE = 'cancel'
+		        </when>
+		        <otherwise>
+		            AND A.ORD_STATE = #{ordst}
+		        </otherwise>
+		    </choose>
+		</if>
+	</select>
+</mapper>

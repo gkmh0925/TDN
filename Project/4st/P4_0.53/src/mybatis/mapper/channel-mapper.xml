@@ -1,0 +1,422 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="Channel">
+	<!-- 채널사관리,배달대행사관리 검색쿼리 -->
+	<select id="ChannelSearch" resultType="EM_COMPANY_MASTER_OMS" parameterType="java.util.HashMap">
+		SELECT
+			RN,
+			CPN_CD,
+			CPN_TYPE,
+			CPN_BIZ_NO,
+			CPN_NM,
+			CEO_NM,
+			CPN_ADDR,
+			CPN_ADDR_DT,
+			CPN_TEL,
+			EMAIL,
+			CPN_STATE,
+			MNG_NM,
+			MNG_HPNO,
+			<!-- EM_LINK_CD, -->
+			IN_APP,
+			REG_DATE
+		FROM(
+			SELECT
+				CPN_CD,
+				CPN_TYPE,
+				CPN_BIZ_NO,
+				CPN_NM,
+				CEO_NM,
+				CPN_ADDR,
+				CPN_ADDR_DT,
+				CPN_TEL,
+				EMAIL,
+				CPN_STATE,
+				MNG_NM,
+				MNG_HPNO,
+				<!-- EM_LINK_CD, -->
+				IN_APP,
+				REG_DATE,
+				ROWNUM RN
+			FROM(
+				SELECT 
+					NVL(A.CPN_CD,' ') CPN_CD, 						-- 업체코드
+					NVL(A.CPN_TYPE,' ')CPN_TYPE,					-- 업체타입
+					NVL(A.CPN_BIZ_NO,' ') CPN_BIZ_NO,				-- 사업자번호
+					NVL(A.CPN_NM,' ') CPN_NM,						-- 상호명
+					NVL(A.CEO_NM,' ') CEO_NM,						-- 대표자명
+					NVL(A.CPN_ADDR,' ') CPN_ADDR,					-- 업체지번주소
+					NVL(A.CPN_ADDR_DT,' ') CPN_ADDR_DT,				-- 업제상세주소
+					NVL(A.CPN_TEL,' ') CPN_TEL,						-- 전화번호
+					NVL(A.EMAIL,' ') EMAIL,							-- 이메일
+					NVL(B.DEFINITION_NM,' ') CPN_STATE,				-- 업체상태구분
+					NVL(A.MNG_NM,' ') MNG_NM,						-- 점장명
+					NVL(A.MNG_HPNO,' ') MNG_HPNO,					-- 핸드폰번호 (점장)
+					<!-- NVL(A.EM_LINK_CD,' ') EM_LINK_CD, -->
+					NVL(A.IN_APP,' ') IN_APP,						-- 인앱여부
+					NVL(A.REG_DATE,'') REG_DATE						-- 등록일시
+				FROM EM_COMPANY_MASTER_OMS A			
+				INNER JOIN EM_REFERENCE_CODE_OMS B 
+				ON B.DEFINITION_CD = A.CPN_STATE AND B.GROUP_CD = 'CPN_STATE' AND A.CPN_TYPE = #{cpntype}
+				<if test='sst!=null and !sst.equals("")'>
+			    	AND B.DEFINITION_CD IN (#{sst})                	-- 업체운영상태값이(옵션박스) null이 아니면 (오픈,중지 2개의값중)값을 불러옴
+				</if>
+				<if test='cpncd!=null and !cpncd.equals("")'>
+					WHERE A.CPN_CD = #{cpncd}						-- 업체코드값이(검색조건) null 이 아니면 값을 불러옴
+				</if>
+				ORDER BY REGEXP_REPLACE(CPN_CD, '[0-9]'), TO_NUMBER(REGEXP_REPLACE(CPN_CD, '[^0-9]'))
+				)
+			<![CDATA[ WHERE ROWNUM <= #{cri.pageNum} * #{cri.amount} ]]>              
+		)
+		<![CDATA[ WHERE RN > (#{cri.pageNum}-1) * #{cri.amount} ]]>   
+	</select>
+	
+	<select id="GetCPNState" resultType="EM_REFERENCE_CODE_OMS"> 
+		SELECT * FROM EM_REFERENCE_CODE_OMS WHERE GROUP_CD = 'CPN_STATE' ORDER BY DECODE(DEFINITION_CD, 'Open', 1)
+	</select>
+	<!-- 채널사 수수료마스터 CMS_APPLY_TYPE type가져오기 -->
+	 <select id="GetCMS_CARD_APPLY_TYPE_ORDER" resultType="EM_REFERENCE_CODE_OMS"> 
+	SELECT DISTINCT A.GROUP_CD, A.DEFINITION_NM
+	FROM EM_REFERENCE_CODE_OMS A
+	LEFT JOIN EM_CMS_OPERATION_OMS B ON B.CPN_CD = #{CPN_CD} AND A.DEFINITION_NM = B.CMS_APPLY_TYPE
+	WHERE A.GROUP_CD = 'CMS_CARD_APPLY_TYPE_ORDER'
+	<if test='CPN_CD == "01"'>
+		AND A.DEFINITION_NM NOT IN('일반') 
+	</if>
+	ORDER BY 
+		CASE 
+		    WHEN A.DEFINITION_NM = '일반' THEN 1
+		    WHEN A.DEFINITION_NM = '3억이하' THEN 2
+		    WHEN A.DEFINITION_NM = '5억이하' THEN 3
+		    WHEN A.DEFINITION_NM = '10억이하' THEN 4
+		    WHEN A.DEFINITION_NM = '30억이하' THEN 5
+		    WHEN A.DEFINITION_NM = '30억초과' THEN 6
+		END		
+	</select> 
+	<!-- 배달사 수수료마스터 CMS_APPLY_TYPE type가져오기 -->
+	<select id="GetCMS_APPLY_TYPE_DELIVERY" resultType="EM_REFERENCE_CODE_OMS"> 
+			SELECT *
+				FROM EM_REFERENCE_CODE_OMS
+					WHERE GROUP_CD = 'CMS_APPLY_TYPE_DELIVERY'
+	</select>
+	<!-- CMS_CALC_TYPE 가져오기 -->
+	<select id="GetCMS_CALC_TYPE" resultType="EM_REFERENCE_CODE_OMS"> 
+		SELECT * FROM EM_REFERENCE_CODE_OMS WHERE GROUP_CD = 'CMS_CALC_TYPE' ORDER BY DEFINITION_NM
+	</select>
+		
+	<!-- ##########################################Detail 0101########################################## -->
+	
+	<!--채널사상세 쿼리  -->
+	<select id="getORDCPN_Detail" resultType="EM_COMPANY_MASTER_OMS" >
+		  SELECT 
+		 	A.CPN_CD,
+		 	A.CPN_TYPE, 
+		 	A.CPN_NM,
+		 	A.CEO_NM, 
+		 	A.CPN_TEL,
+		    A.HPNO,
+		    A.EMAIL, 
+		    B.DEFINITION_NM AS CPN_STATE,
+		 	A.CPN_ADDR, 
+		 	A.CPN_ROAD_ADDR,
+		 	A.CPN_ADDR_DT, 
+		 	A.CPN_BIZ_NO,
+			A.CPN_IMAGE_URL,
+			A.CPN_DESC,
+			A.OPN_DT,
+			A.CPN_BIZ_TYPE,
+			A.MEMO,
+			A.MNG_NM,
+			A.MNG_HPNO,
+			A.FC_NM,
+			A.IN_APP,
+			<!-- A.EM_LINK_CD AS LINK_CD, -->
+			A.STATE_MDF_DATE,
+			C.USER_NM AS REG_USER_NM,
+			A.REG_DATE,
+			D.USER_NM AS MDF_USER_NM,
+			A.MDF_DATE
+		FROM EM_COMPANY_MASTER_OMS A
+		INNER JOIN EM_REFERENCE_CODE_OMS B 
+			ON B.DEFINITION_CD = A.CPN_STATE 
+		    AND B.GROUP_CD = 'CPN_STATE' 
+		LEFT OUTER JOIN EM_USER_ACCOUNT_OMS C ON (A.REG_USER_CD = C.USER_CD)
+		LEFT OUTER JOIN EM_USER_ACCOUNT_OMS D ON (A.MDF_USER_CD = D.USER_CD)
+		WHERE A.CPN_CD  = #{CPN_CD} AND A.CPN_TYPE = 'ORDER'
+	</select>
+	<!--채널사 중계 수수료마스터 쿼리  -->
+ 	 <select id="getFEE_ORDCPN_Detail" resultType="EM_CMS_OPERATION_OMS" parameterType="java.util.HashMap" >
+		  SELECT
+		  	A.CPN_TYPE,  
+		 	A.CPN_CD,
+		 	A.CMS_APPLY_TYPE,
+		 	A.CMS_APPLY_TYPE_NM,
+		 	A.CMS_CALC_TYPE,
+		 	A.CMS_CALC_TYPE_NM,
+		 	B.USER_NM AS REG_USER_NM,
+			A.REG_DATE,
+			C.USER_NM AS MDF_USER_NM,
+			A.MDF_DATE
+		FROM EM_CMS_OPERATION_OMS A
+		LEFT OUTER JOIN EM_USER_ACCOUNT_OMS B ON (A.REG_USER_CD = B.USER_CD)
+		LEFT OUTER JOIN EM_USER_ACCOUNT_OMS C ON (A.MDF_USER_CD = C.USER_CD)
+		WHERE A.CPN_CD  = #{CPN_CD} AND A.CPN_TYPE = 'ORDER' AND A.CMS_APPLY_TYPE='기본'
+		ORDER BY A.REG_DATE ASC
+	</select>
+	<!--채널사 카드 수수료마스터 쿼리  -->
+ 	 <select id="getCARD_FEE_ORDCPN_Detail" resultType="EM_CMS_OPERATION_OMS" parameterType="java.util.HashMap" >
+		  SELECT
+		  	A.CPN_TYPE,  
+		 	A.CPN_CD,
+		 	A.CMS_APPLY_TYPE,
+		 	A.CMS_APPLY_TYPE_NM,
+		 	A.CMS_CALC_TYPE,
+		 	A.CMS_CALC_TYPE_NM,
+		 	B.USER_NM AS REG_USER_NM,
+			A.REG_DATE,
+			C.USER_NM AS MDF_USER_NM,
+			A.MDF_DATE
+		FROM EM_CMS_OPERATION_OMS A
+		LEFT OUTER JOIN EM_USER_ACCOUNT_OMS B ON (A.REG_USER_CD = B.USER_CD)
+		LEFT OUTER JOIN EM_USER_ACCOUNT_OMS C ON (A.MDF_USER_CD = C.USER_CD)
+		WHERE A.CPN_CD  = #{CPN_CD} AND A.CPN_TYPE = 'ORDER' AND A.CMS_APPLY_TYPE NOT IN('기본')
+		ORDER BY A.REG_DATE ASC
+	</select>
+	<!-- 채널사 수수료 등록쿼리 -->
+<!-- 	<insert id="setInsetChannelDataFee" parameterType="java.util.HashMap">
+			INSERT
+				INTO EM_CMS_OPERATION_OMS (
+						CPN_TYPE,
+						CPN_CD,
+						CMS_CALC_TYPE,
+		 				CMS_CALC_TYPE_NM,
+		 				CMS_CALC_AMT_TYPE,
+		 				CMS_CALC_AMT_TYPE_NM,
+		 				REG_USER_CD,
+						REG_DATE
+					)
+				VALUES
+					(	
+						#{CPN_TYPE},
+						#{regVal.CPN_CD},
+						#{regVal.CMS_CALC_TYPE},
+						#{regVal.CMS_CALC_TYPE_NM},
+						#{regVal.CMS_CALC_AMT_TYPE},
+						#{regVal.CMS_CALC_AMT_TYPE_NM},						
+						#{REG_USER_CD},
+						SYSDATE
+					)
+				
+	</insert>  -->
+	<!-- 채널사 수수료 등록쿼리 -->
+	<!-- <insert id="setInsetChannelDataFee" parameterType="java.util.List">
+	
+			INSERT
+				INTO EM_CMS_OPERATION_OMS (
+						CPN_TYPE,
+						CPN_CD,
+						CMS_APPLY_TYPE,
+						CMS_APPLY_TYPE_NM,
+						CMS_CALC_TYPE,
+		 				CMS_CALC_TYPE_NM,
+		 				REG_USER_CD,
+						REG_DATE
+					)
+	<foreach collection="list" item="regList"  open="" close="" separator="">
+				VALUES
+					(	
+						#{regList.CPN_TYPE},
+						#{regList.CPN_CD},
+						#{regList.CMS_APPLY_TYPE},
+						#{regList.CMS_APPLY_TYPE_NM},
+						#{regList.CMS_CALC_TYPE},
+						#{regList.CMS_CALC_TYPE_NM},
+						#{regList.REG_USER_CD},
+						SYSDATE
+					)
+			</foreach>	
+	</insert>  -->
+	<!-- 채널사 수수료등록 -->
+<insert id="setInsetChannelDataFee" parameterType="java.util.List">
+	INSERT ALL
+	<foreach collection="list" item="regList" >
+		INTO EM_CMS_OPERATION_OMS (
+			CPN_TYPE,
+			CPN_CD,
+			CMS_APPLY_TYPE,
+			CMS_APPLY_TYPE_NM,
+			CMS_CALC_TYPE,
+			CMS_CALC_TYPE_NM,
+			REG_USER_CD,
+			REG_DATE
+		) VALUES (
+			#{regList.CPN_TYPE},
+			#{regList.CPN_CD},
+			#{regList.CMS_APPLY_TYPE},
+			#{regList.CMS_APPLY_TYPE_NM},
+			#{regList.CMS_CALC_TYPE},
+			#{regList.CMS_CALC_TYPE_NM},
+			#{regList.REG_USER_CD},
+			SYSDATE
+		)
+	</foreach>
+	SELECT * FROM DUAL
+</insert>
+<insert id="setInsetDeliveryDataFee" parameterType="java.util.List">
+	INSERT ALL
+	<foreach collection="list" item="regList" >
+		INTO EM_CMS_OPERATION_OMS (
+			CPN_TYPE,
+			CPN_CD,
+			CMS_APPLY_TYPE,
+			CMS_APPLY_TYPE_NM,
+			CMS_CALC_TYPE,
+			CMS_CALC_TYPE_NM,
+			REG_USER_CD,
+			REG_DATE
+		) VALUES (
+			#{regList.CPN_TYPE},
+			#{regList.CPN_CD},
+			#{regList.CMS_APPLY_TYPE},
+			#{regList.CMS_APPLY_TYPE_NM},
+			#{regList.CMS_CALC_TYPE},
+			#{regList.CMS_CALC_TYPE_NM},
+			#{regList.REG_USER_CD},
+			SYSDATE
+		)
+	</foreach>
+	SELECT * FROM DUAL
+</insert>
+
+	<!--배달사상세 쿼리  -->
+	<select id="getDLVCPN_Detail" resultType="EM_COMPANY_MASTER_OMS" >
+		  SELECT 
+		 	A.CPN_CD,
+		 	A.CPN_TYPE, 
+		 	A.CPN_NM,
+		 	A.CEO_NM, 
+		 	A.CPN_TEL,
+		    A.HPNO,
+		    A.EMAIL, 
+		    B.DEFINITION_NM AS CPN_STATE,
+		 	A.CPN_ADDR, 
+		 	A.CPN_ROAD_ADDR,
+		 	A.CPN_ADDR_DT, 
+		 	A.CPN_BIZ_NO,
+			A.CPN_IMAGE_URL,
+			A.CPN_DESC,
+			A.OPN_DT,
+			A.CPN_BIZ_TYPE,
+			A.MEMO,
+			A.MNG_NM,
+			A.MNG_HPNO,
+			A.FC_NM,
+			A.IN_APP,
+			<!-- A.EM_LINK_CD AS LINK_CD, -->
+			A.STATE_MDF_DATE,
+			C.USER_NM AS REG_USER_NM,
+			A.REG_DATE,
+			D.USER_NM AS MDF_USER_NM,
+			A.MDF_DATE
+		FROM EM_COMPANY_MASTER_OMS A
+		INNER JOIN EM_REFERENCE_CODE_OMS B 
+			ON B.DEFINITION_CD = A.CPN_STATE 
+		    AND B.GROUP_CD = 'CPN_STATE' 
+		LEFT OUTER JOIN EM_USER_ACCOUNT_OMS C ON (A.REG_USER_CD = C.USER_CD)
+		LEFT OUTER JOIN EM_USER_ACCOUNT_OMS D ON (A.MDF_USER_CD = D.USER_CD)
+		WHERE A.CPN_CD  = #{CPN_CD} AND A.CPN_TYPE = 'DELIVERY'
+	</select>
+	<!--배달사 수수료마스터 쿼리  -->
+ 	 <select id="getFEE_DELIVERY_Detail" resultType="EM_CMS_OPERATION_OMS" parameterType="java.util.HashMap" >
+		  SELECT
+		  	A.CPN_TYPE,  
+		 	A.CPN_CD,
+		 	A.CMS_APPLY_TYPE,
+		 	A.CMS_APPLY_TYPE_NM,
+		 	A.CMS_CALC_TYPE,
+		 	A.CMS_CALC_TYPE_NM,
+		 	C.USER_NM AS REG_USER_NM,
+			A.REG_DATE,
+			D.USER_NM AS MDF_USER_NM,
+			A.MDF_DATE
+		FROM EM_CMS_OPERATION_OMS A
+		LEFT OUTER JOIN EM_USER_ACCOUNT_OMS C ON (A.REG_USER_CD = C.USER_CD)
+		LEFT OUTER JOIN EM_USER_ACCOUNT_OMS D ON (A.MDF_USER_CD = D.USER_CD)
+		WHERE A.CPN_CD  = #{CPN_CD} AND A.CPN_TYPE = 'DELIVERY'
+		ORDER BY A.REG_DATE ASC
+	</select>
+
+	<!-- Paging 처리 위해 게시글 개수 가져오기 -->
+	<!-- 매장 검색 정보 총 게시글 개수 확인 채널사 -->
+	<select id="getOrderChannelTotal" resultType="int" parameterType="java.util.HashMap">
+		SELECT 
+			COUNT(*)
+		FROM EM_COMPANY_MASTER_OMS A
+		INNER JOIN EM_REFERENCE_CODE_OMS B 
+		ON B.DEFINITION_CD = A.CPN_STATE AND B.GROUP_CD = 'CPN_STATE' AND A.CPN_TYPE = 'ORDER'
+		<if test='sst!=null and !sst.equals("")'>
+	    	AND B.DEFINITION_CD IN (#{sst})
+		</if>
+		<if test='cpncd!=null and !cpncd.equals("")'>
+			WHERE A.CPN_CD = #{cpncd}
+		</if>
+	</select>
+	<!-- 매장 검색 정보 총 게시글 개수 확인 배달대행사-->
+	<select id="getOrderDeliveryTotal" resultType="int" parameterType="java.util.HashMap">
+		SELECT 
+			COUNT(*)
+		FROM EM_COMPANY_MASTER_OMS A
+		INNER JOIN EM_REFERENCE_CODE_OMS B 
+		ON B.DEFINITION_CD = A.CPN_STATE AND B.GROUP_CD = 'CPN_STATE' AND A.CPN_TYPE = 'DELIVERY'
+		<if test='sst!=null and !sst.equals("")'>
+	    	AND B.DEFINITION_CD IN (#{sst})
+		</if>
+		<if test='cpncd!=null and !cpncd.equals("")'>
+			WHERE A.CPN_CD = #{cpncd}
+		</if>
+	</select>
+	<!-- 채널사,배달대행사 등록쿼리 -->
+	<insert id="setInsetChannelData" parameterType="java.util.HashMap">
+			INSERT <!-- ALL -->
+				INTO EM_COMPANY_MASTER_OMS (
+						CPN_CD,
+						CPN_NM,
+						CPN_STATE,
+						CPN_TYPE,
+						CEO_NM,
+						CPN_BIZ_NO,
+						CPN_ADDR,
+						CPN_TEL,
+						CPN_DESC,
+						CPN_IMAGE_URL,
+						MNG_NM,
+						MNG_HPNO,
+						EMAIL,
+						IN_APP,
+						<!-- EM_LINK_CD, -->
+						REG_USER_CD,
+						REG_DATE
+					)
+				VALUES
+					(
+						#{regVal.CPN_CD},
+						#{regVal.CPN_NM},
+						#{regVal.CPN_STATE},
+						#{CPN_TYPE},
+						#{regVal.CEO_NM},
+						REPLACE(#{regVal.CPN_BIZ_NO}, '-', ''),
+						#{regVal.CPN_ADDR},
+						#{regVal.CPN_TEL},
+						#{regVal.CPN_DESC},
+						#{regVal.CPN_IMAGE_URL},
+						#{regVal.MNG_NM},
+						REPLACE(#{regVal.MNG_HPNO}, '-', ''),
+						#{regVal.EMAIL},
+						#{regVal.IN_APP},
+						<!-- #{regVal.EM_LINK_CD}, -->
+						#{REG_USER_CD},
+						SYSDATE
+					)
+				
+	</insert>
+</mapper>

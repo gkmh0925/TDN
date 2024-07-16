@@ -1,0 +1,58 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+
+<mapper namespace="deliveryFee">
+
+	<!-- 배달료 마스터 검색일자 조회 -->
+	<select id="deliveryFeeList" resultType="EM_DELIVERY_FEE_MASTER_OMS" parameterType="java.util.HashMap">
+	SELECT 
+			ROW_NUMBER() OVER(ORDER BY A.START_MONTH,  A.END_MONTH) AS RN, 
+			A.DV_SEQ_CD,
+			A.START_MONTH,
+			A.END_MONTH,
+			A.MASTER_NM,
+			B.DEFINITION_NM AS MASTER_TYPE_NM,  
+       		A.AMT,
+       		C.USER_NM AS REG_USER_NM,
+       		A.REG_DATE,
+       		D.USER_NM AS MDF_USER_NM,
+       		A.MDF_DATE
+  		FROM
+  			EM_DELIVERY_FEE_MASTER_OMS A
+  		LEFT OUTER JOIN
+  			EM_REFERENCE_CODE_OMS B
+  				ON A.MASTER_TYPE = B.DEFINITION_CD
+  				AND B.GROUP_CD  = 'MASTER_TYPE'
+  			LEFT OUTER JOIN
+  				EM_USER_ACCOUNT_OMS C
+  					ON A.REG_USER_CD = C.USER_CD
+  			LEFT OUTER JOIN
+  				EM_USER_ACCOUNT_OMS D
+  					ON A.MDF_USER_CD = D.USER_CD
+			WHERE <![CDATA[ A.START_MONTH >= #{sdate} 
+			    AND A.END_MONTH <= #{edate}  ]]>
+ 		ORDER BY A.START_MONTH,  A.END_MONTH
+ 		
+	</select>
+</mapper>
+	
+	
+	
+	
+<!-- 	<select id ="" parameterType= " " resultType=" ">
+	
+	</select>
+	
+	<insert id ="insertDeliveryFee" parameterType= " " resultType=" ">
+	
+	</insert>	
+	
+	
+	<update id ="updateDeliveryFee" parameterType= " " resultType=" ">
+	
+	</update>
+	
+	<delete id ="deleteDeliveryFee" parameterType= " " resultType=" ">
+	
+	</delete> -->	
+	

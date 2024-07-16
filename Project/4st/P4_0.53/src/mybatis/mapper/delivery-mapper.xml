@@ -1,0 +1,313 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="delivery">
+<!-- !@@0701 new -->
+
+	<select id="selectDeliveryProductList" resultType="TB_DELIVERY_STATE" parameterType="java.util.HashMap">
+		SELECT 
+			ROW_NUMBER() OVER(ORDER BY B.CPN_NM, A.PRD_NM) AS RN, 
+			A.CH_CD AS CH_CD,
+			B.CPN_NM AS CPN_NM, 
+			B.CPN_TYPE AS CPN_TYPE,
+			A.PRD_CD AS PRD_CD, 
+			A.PRD_NM AS PRD_NM, 
+			C.CTGR_NM AS STO_CTGR_NM,
+			A.PRD_STATE AS PRD_STATE, 
+			A.SALE_AMT AS SALE_AMT, 
+			A.SEQ AS SEQ, 
+			A.REG_USER_CD AS REG_USER_CD,
+			A.REG_DATE AS REG_DATE, 
+		    A.MDF_USER_CD AS MDF_USER_CD, 
+		    A.MDF_DATE AS MDF_DATE,
+			D.USER_NM AS REG_USER_NM,
+			E.USER_NM AS MDF_USER_NM,
+			A.STD_AMT AS STD_AMT
+		FROM 
+		  	EM_PRODUCT_MASTER_OMS A
+		LEFT OUTER JOIN 
+		  	EM_COMPANY_MASTER_OMS B 
+			  	ON A.CH_CD = B.CPN_CD 
+			  	AND B.CPN_TYPE  = 'ORDER'
+		LEFT OUTER JOIN 
+		  	EM_CATEGORY_MASTER_OMS C 
+			  	ON A.CH_CD = C.CH_CD 
+			  	AND A.STO_CTGR_CD = C.CTGR_CD 
+		  		AND C.CTGR_TYPE IN ('BMIN_HOME', 'YGY_CTGR')
+		LEFT OUTER JOIN
+			EM_USER_ACCOUNT_OMS D
+				ON A.REG_USER_CD = D.USER_CD
+		LEFT OUTER JOIN
+			EM_USER_ACCOUNT_OMS E
+				ON A.MDF_USER_CD  = E.USER_CD
+	  	<where>
+	        <if test='cpn_nm !=null and !cpn_nm.equals("")'>
+	        	AND B.CPN_NM like '%' || #{cpn_nm} || '%'
+	        </if>
+	        <if test='prd_nm !=null and !prd_nm.equals("")'>
+	            AND A.PRD_NM like '%' || #{prd_nm} || '%'
+	        </if>
+    	</where>
+	</select>
+
+
+	
+	<select id="selectSearchDeliveryProductTotalCnt" resultType="int" parameterType="java.util.HashMap">
+		SELECT 
+			COUNT(*)
+		FROM 
+		  	EM_PRODUCT_MASTER_OMS A
+		LEFT OUTER JOIN 
+		  	EM_COMPANY_MASTER_OMS B 
+			  	ON A.CH_CD = B.CPN_CD 
+			  	AND B.CPN_TYPE  = 'ORDER'
+		LEFT OUTER JOIN 
+		  	EM_CATEGORY_MASTER_OMS C 
+			  	ON A.CH_CD = C.CH_CD 
+			  	AND A.STO_CTGR_CD = C.CTGR_CD 
+		  		AND C.CTGR_TYPE IN ('BMIN_HOME', 'YGY_CTGR')
+		LEFT OUTER JOIN
+			EM_USER_ACCOUNT_OMS D
+				ON A.REG_USER_CD = D.USER_CD
+		LEFT OUTER JOIN
+			EM_USER_ACCOUNT_OMS E
+				ON A.MDF_USER_CD  = E.USER_CD
+	  	<where>
+      		<if test='cpn_nm !=null and !cpn_nm.equals("")'>
+	        	AND B.CPN_NM like '%' || #{cpn_nm} || '%'
+	        </if>
+	        <if test='prd_nm !=null and !prd_nm.equals("")'>
+	            AND A.PRD_NM like '%' || #{prd_nm} || '%'
+	        </if>
+    	</where>	  	
+	</select>
+	
+	
+	<select id="selectPrdStateReferenceList" resultType="EM_REFERENCE_CODE_OMS" parameterType="java.util.HashMap">
+		SELECT * FROM EM_REFERENCE_CODE_OMS erco WHERE erco.GROUP_CD = #{group_cd}	
+	</select>
+	
+	
+	
+	<insert id="insertDeliveryProduct" parameterType="EmProductMasterOmsDTO">
+		INSERT INTO EM_PRODUCT_MASTER_OMS
+		(
+			CH_CD,
+			PRD_CD,
+			PRD_NM,
+			SEQ,
+			STD_AMT,
+			SALE_AMT,
+			PRD_STATE,
+			PRD_STATE_MDF_DT,
+			PRD_GUIDE,
+			STO_CTGR_CD,
+			PRD_CTGR_CD,
+			TAX_TYPE,
+			SALE_START_DT,
+			SALE_END_DT,
+			PRD_BASE_IMG_URL,
+			PRD_DT_IMG_URL,
+			USE_SALES_ADULT,
+			PRD_TYPE,
+			REG_USER_CD,
+			REG_DATE,
+			MDF_USER_CD,
+			MDF_DATE,
+			WORK_TYPE
+		)
+		VALUES
+		(
+			#{chCd}, 
+			 #{prdCd}, 
+			 #{prdNm},
+			 #{seq}, 
+			 #{stdAmt}, 
+			 #{saleAmt}, 
+			 #{prdState}, 
+			 #{prdStateMdfDt}, 
+			 #{prdGuide}, 
+			 #{stoCtgrCd}, 
+			 #{prdCtgrCd}, 
+			 #{taxType}, 
+			 #{saleStartDt}, 
+			 #{saleEndDt}, 
+			 #{prdBaseImgUrl}, 
+			 #{prdDtImgUrl}, 
+			 #{useSalesAdult}, 
+			 #{prdType},
+ 			 #{regUserCd},
+ 			 SYSDATE,
+			 #{mdfUserCd},
+		 	 #{mdfDate},			  
+			 #{workType}
+		 )
+	</insert>
+	
+	<select id="selectEmProductMasterOmsInfo" resultType="EmProductMasterOmsEntity" parameterType="java.util.HashMap">
+		SELECT
+			CH_CD AS chCd,
+			PRD_CD AS prdCd,
+			PRD_NM AS prdNm,
+			SEQ AS seq,
+			STD_AMT AS stdAmt,
+			SALE_AMT AS saleAtm,
+			PRD_STATE AS prdState,
+			PRD_STATE_MDF_DT AS prdStateMdfDt,
+			PRD_GUIDE AS prdGuide,
+			STO_CTGR_CD AS stoCtgrCd,
+			PRD_CTGR_CD AS prdCtgrCd,
+			TAX_TYPE AS taxType,
+			SALE_START_DT AS saleStartDt,
+			SALE_END_DT AS saleEndDt,
+			PRD_BASE_IMG_URL AS prdBaseImgUrl,
+			PRD_DT_IMG_URL AS prdDtImgUrl,
+			USE_SALES_ADULT AS useSalesAdult,
+			PRD_TYPE AS prdType,
+			REG_USER_CD AS regUserCd,
+			REG_DATE AS regDate,
+			MDF_USER_CD AS mdfUserCd,
+			MDF_DATE AS mdfDate,
+			WORK_TYPE AS workType
+		FROM
+			EM_PRODUCT_MASTER_OMS
+		WHERE
+			CH_CD = #{chCd}
+			AND PRD_CD = #{prdCd}
+	</select>
+	
+	<select id="selectDeliveryProductInfo" resultType="EmProductMasterOmsDTO" parameterType="java.util.HashMap">
+		SELECT
+			A.CH_CD AS chCd,
+			B.CPN_NM AS cpnNm,
+			A.PRD_CD AS prdCd,
+			A.PRD_NM AS prdNm,
+			A.STO_CTGR_CD AS stoCtgrCd, 
+			C.CTGR_NM AS stoCtgrNm,
+			A.PRD_TYPE AS prdType,
+			A.PRD_STATE AS prdState,
+			A.STD_AMT AS stdAmt,
+			A.SALE_AMT AS saleAmt,
+			A.SEQ AS seq, 
+			A.TAX_TYPE AS taxType,
+			A.PRD_GUIDE AS prdGuide,
+			A.WORK_TYPE AS workType,
+			A.REG_USER_CD AS regUserCd,
+			A.REG_DATE AS regDate,
+			A.MDF_USER_CD AS mdfUserCd, 
+			   A.MDF_DATE AS mdfDate,
+			A.SALE_START_DT AS saleStartDt,
+			A.SALE_END_DT AS saleEndDt,
+			A.PRD_BASE_IMG_URL AS prdBaseImgUrl,
+			A.PRD_DT_IMG_URL AS prdDtImgUrl,
+			   A.USE_SALES_ADULT AS useSalesAdult,
+			A.PRD_TYPE AS prdType
+		FROM
+			EM_PRODUCT_MASTER_OMS A
+		LEFT OUTER JOIN EM_COMPANY_MASTER_OMS B ON
+			A.CH_CD = B.CPN_CD
+			AND B.CPN_TYPE = 'ORDER'
+		LEFT OUTER JOIN EM_CATEGORY_MASTER_OMS C ON
+			A.CH_CD = C.CH_CD
+			AND A.STO_CTGR_CD = C.CTGR_CD
+			AND C.CTGR_TYPE IN ('BMIN_HOME', 'YGY_CTGR')
+		WHERE
+			A.CH_CD = #{chCd}
+			AND A.PRD_CD = #{prdCd} 
+	</select>
+	
+	<delete id="deleteEmProductMasterOms" parameterType="HashMap">
+		DELETE
+		FROM
+			EM_PRODUCT_MASTER_OMS
+		WHERE
+			CH_CD = #{chCd}
+			AND PRD_CD = #{prdCd}
+ 	</delete> 
+ 	
+	<select id="selectStoreCategoryListByChCd" resultType="EM_CATEGORY_MASTER_OMS" parameterType="String">
+		SELECT
+			A.CTGR_TYPE,
+			A.CH_CD,
+			A.CTGR_NM,
+			A.CTGR_CD
+		FROM
+			EM_CATEGORY_MASTER_OMS A
+		LEFT OUTER JOIN EM_COMPANY_MASTER_OMS B ON
+			A.CH_CD = B.CPN_CD
+			AND B.CPN_TYPE = 'ORDER'
+		WHERE
+			A.CH_CD = #{chCd}
+			AND A.CTGR_TYPE IN ('BMIN_HOME', 'YGY_CTGR')
+	</select>
+	
+	
+	<select id="selectPrdCategoryListByChCd" resultType="EM_CATEGORY_MASTER_OMS" parameterType="String">
+		SELECT
+			A.CTGR_TYPE,
+			A.CH_CD,
+			A.CTGR_NM,
+			A.CTGR_CD
+		FROM
+			EM_CATEGORY_MASTER_OMS A
+		LEFT OUTER JOIN EM_COMPANY_MASTER_OMS B ON
+			A.CH_CD = B.CPN_CD
+			AND B.CPN_TYPE = 'ORDER'
+		WHERE
+			A.CH_CD = #{chCd}
+			AND A.CTGR_TYPE IN ('BMIN_PRD')
+	</select>
+	
+	
+	
+	
+	<select id="selectEmReferenceCodeOmsByGroupCd" resultType="EM_REFERENCE_CODE_OMS" parameterType="String">
+		SELECT
+			GROUP_CD,
+			DEFINITION_CD,
+			DEFINITION_NM,
+			MEMO,
+			REG_USER_CD,
+			REG_DATE,
+			MDF_USER_CD,
+			MDF_DATE
+		FROM
+			EMARTDEV.EM_REFERENCE_CODE_OMS
+		WHERE
+			GROUP_CD = #{groupCd}
+	</select>
+	
+	
+	<update id ="updateEmProductMasterOms" parameterType ="java.util.HashMap" >
+	
+		UPDATE
+			EM_PRODUCT_MASTER_OMS
+		SET
+			<if test="prdStateChange != null and prdStateChange != ''">
+     			 PRD_STATE_MDF_DT = SYSDATE,
+    		</if>
+			PRD_NM = #{prdNm},
+			SEQ = #{seq},
+			STD_AMT = #{stdAmt},
+			SALE_AMT = #{saleAmt},
+			PRD_STATE = #{prdState},
+			PRD_GUIDE = #{prdGuide},
+			STO_CTGR_CD = #{stoCtgrCd},
+			PRD_CTGR_CD = #{prdCtgrCd},
+			TAX_TYPE = #{taxType},
+			SALE_START_DT = #{saleStartDt},
+			SALE_END_DT = #{saleEndDt},
+			PRD_BASE_IMG_URL = #{prdBaseImgUrl},
+			PRD_DT_IMG_URL = #{prdDtImgUrl},
+			USE_SALES_ADULT = #{useSalesAdult},
+			PRD_TYPE = #{prdType},
+			MDF_USER_CD = #{mdfUserCd},
+			MDF_DATE = SYSDATE,
+			WORK_TYPE = #{workType}			
+		WHERE
+			CH_CD = #{chCd}
+			AND PRD_CD = #{prdCd}
+	</update>
+	
+	
+	
+</mapper>
